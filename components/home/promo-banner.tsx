@@ -6,13 +6,15 @@ import { getActivePromotion } from "@/lib/api/promotions";
 export async function PromoBanner() {
   const promo = await getActivePromotion();
   if (!promo) return null;
-
   return (
-    <div>
-      <p>
-        {promo.title} — {promo.description}
-        {promo.code ? ` Use code: ${promo.code}` : ""}
-      </p>
+    <div role="region" aria-label="Active promotion">
+      <p>{promo.title}</p>
+      <p>{promo.description}</p>
+      {promo.code && (
+        <p>
+          <strong>Code: {promo.code}</strong>
+        </p>
+      )}
     </div>
   );
 }

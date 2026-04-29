@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/api/products";
-import { getStock } from "@/lib/api/stock";
 import { isApi404 } from "@/lib/api/client";
+import { StockBadge } from "./stock-badge";
+import { StockSkeleton } from "./stock-skeleton";
 
 type Props = {
   params: Promise<{ param: string }>;
@@ -27,29 +28,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch {
     return { title: "Product" };
   }
-}
-
-// Inline async server component for the (uncached) stock fetch + the Add to
-// Cart button (whose disabled state depends on stock). Lives inside <Suspense>
-// below so the cached product details can stream first. Required by
-// cacheComponents: true — uncached data MUST be inside a Suspense boundary.
-async function StockAndAddToCart({ param }: { param: string }) {
-  const stock = await getStock(param);
-  const outOfStock = stock.stock === 0;
-  return (
-    <>
-      <p>
-        {outOfStock
-          ? "Out of stock"
-          : stock.lowStock
-            ? `Only ${stock.stock} left`
-            : `In stock: ${stock.stock}`}
-      </p>
-      <button type="button" disabled={outOfStock}>
-        Add to Cart
-      </button>
-    </>
-  );
 }
 
 export default async function ProductPage({ params }: Props) {
@@ -81,9 +59,15 @@ export default async function ProductPage({ params }: Props) {
       <p>{usd.format(product.price / 100)}</p>
       <p>{product.description}</p>
 
-      <Suspense fallback={<p>Loading stock...</p>}>
-        <StockAndAddToCart param={param} />
+      <Suspense fallback={<StockSkeleton />}>
+        <StockBadge param={param} />
       </Suspense>
+
+      {/* Disabled-by-default placeholder. Phase 5b swaps in a client island
+          that re-enables based on resolved stock + handles the server action. */}
+      <button type="button" disabled>
+        Add to Cart
+      </button>
     </div>
   );
 }

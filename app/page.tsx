@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { PromoBanner } from "@/components/home/promo-banner";
+import { PromoSkeleton } from "@/components/home/promo-skeleton";
 import { getFeaturedProducts } from "@/lib/api/products";
-import { getActivePromotion } from "@/lib/api/promotions";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -20,27 +21,6 @@ const usd = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-// Inline async server component that fetches the (uncached) promo. Wrapped in
-// <Suspense> below so the cached hero + featured grid can paint immediately
-// while the promo streams in. Required by cacheComponents: true — uncached
-// data MUST live inside a Suspense boundary. Phase 4 will replace the inline
-// component with a dedicated PromoBanner + skeleton fallback.
-async function PromoBanner() {
-  const promo = await getActivePromotion();
-  if (!promo) return null;
-  return (
-    <div role="region" aria-label="Active promotion">
-      <p>{promo.title}</p>
-      <p>{promo.description}</p>
-      {promo.code && (
-        <p>
-          <strong>Code: {promo.code}</strong>
-        </p>
-      )}
-    </div>
-  );
-}
-
 export default async function HomePage() {
   const featured = await getFeaturedProducts();
 
@@ -57,7 +37,7 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      <Suspense fallback={<p>Loading promotion...</p>}>
+      <Suspense fallback={<PromoSkeleton />}>
         <PromoBanner />
       </Suspense>
 

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { searchProducts } from "@/lib/api/products";
+import { Suspense } from "react";
 import { getCategories } from "@/lib/api/categories";
+import { SearchResults } from "./search-results";
+import { ResultsSkeleton } from "./results-skeleton";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -18,33 +19,16 @@ type Props = {
   searchParams: Promise<{ q?: string; category?: string }>;
 };
 
-const RESULT_LIMIT = 5;
-
-const usd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
 export default async function SearchPage({ searchParams }: Props) {
   const { q, category } = await searchParams;
-
-  // Both calls are cached. searchProducts is keyed on its params, so each
-  // (q, category) combination gets its own cache entry automatically.
-  const [{ products }, categories] = await Promise.all([
-    searchProducts({
-      q: q || undefined,
-      category: category || undefined,
-      limit: RESULT_LIMIT,
-    }),
-    getCategories(),
-  ]);
+  const categories = await getCategories();
 
   return (
     <div>
       <h1>Search</h1>
 
       {/* Plain GET form — the URL is the state. Refresh or share works for
-          free; Phase 4 swaps in a client island for debounced auto-submit. */}
+          free; Phase 5 swaps in a client island for debounced auto-submit. */}
       <form method="GET" action="/search">
         <label>
           <span>Query</span>
@@ -69,22 +53,14 @@ export default async function SearchPage({ searchParams }: Props) {
         <button type="submit">Search</button>
       </form>
 
-      {q && products.length === 0 ? (
-        <p>No results for &quot;{q}&quot;</p>
-      ) : (
-        <ul>
-          {products.map((p) => (
-            <li key={p.id}>
-              <Link href={`/products/${p.slug}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.images[0]} alt={p.name} />
-                <p>{p.name}</p>
-                <p>{usd.format(p.price / 100)}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* `key` forces React to re-suspend on navigation between queries —
+          without it the boundary would be reused and the fallback skipped. */}
+      <Suspense
+        key={`${q ?? ""}-${category ?? ""}`}
+        fallback={<ResultsSkeleton />}
+      >
+        <SearchResults q={q} category={category} />
+      </Suspense>
     </div>
   );
 }
