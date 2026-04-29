@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/api/products";
+import { getStock } from "@/lib/api/stock";
 import { isApi404 } from "@/lib/api/client";
+import { AddToCartForm } from "./add-to-cart-form";
 import { StockBadge } from "./stock-badge";
 import { StockSkeleton } from "./stock-skeleton";
 
@@ -45,6 +47,14 @@ export default async function ProductPage({ params }: Props) {
     throw err;
   }
 
+  // Option A from the Phase 5b plan: also resolve stock at the page level so
+  // the client form has an accurate `max` for its quantity input from first
+  // paint. The visible stock indicator still streams via <StockBadge> inside
+  // <Suspense>, which keeps the Phase 4 streaming demo intact. Cost: one
+  // extra uncached round-trip per request (stock is per-spec dynamic and not
+  // cacheable). Worth it to avoid a separate "loading max" client state.
+  const initialStock = await getStock(param);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,11 +73,7 @@ export default async function ProductPage({ params }: Props) {
         <StockBadge param={param} />
       </Suspense>
 
-      {/* Disabled-by-default placeholder. Phase 5b swaps in a client island
-          that re-enables based on resolved stock + handles the server action. */}
-      <button type="button" disabled>
-        Add to Cart
-      </button>
+      <AddToCartForm productId={product.id} stock={initialStock.stock} />
     </div>
   );
 }
