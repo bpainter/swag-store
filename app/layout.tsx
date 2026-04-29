@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
-import { Header } from "@/components/layout/header";
+import { Suspense } from "react";
+import { Header, HeaderSkeleton } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
@@ -43,7 +44,12 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <Header />
+        {/* Header reads the cart cookie, so it's dynamic. Suspense lets the
+            rest of the page (footer, route content) keep prerendering while
+            the header — including the live cart badge — streams in. */}
+        <Suspense fallback={<HeaderSkeleton />}>
+          <Header />
+        </Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

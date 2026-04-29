@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCart } from "@/lib/api/cart";
+import { removeItemAction, updateQuantityAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Cart",
@@ -44,6 +45,37 @@ export default async function CartPage() {
             <p>{usd.format(item.product.price / 100)} each</p>
             <p>Qty: {item.quantity}</p>
             <p>Line total: {usd.format(item.lineTotal / 100)}</p>
+
+            {/* Each button is its own tiny <form> bound to the action with the
+                pre-computed args. No "use client" needed — server components
+                can render forms whose action is a server action reference. */}
+            <form
+              action={updateQuantityAction.bind(
+                null,
+                item.productId,
+                item.quantity + 1,
+              )}
+            >
+              <button type="submit" aria-label={`Increase ${item.product.name}`}>
+                +
+              </button>
+            </form>
+            <form
+              action={updateQuantityAction.bind(
+                null,
+                item.productId,
+                item.quantity - 1,
+              )}
+            >
+              <button type="submit" aria-label={`Decrease ${item.product.name}`}>
+                −
+              </button>
+            </form>
+            <form action={removeItemAction.bind(null, item.productId)}>
+              <button type="submit" aria-label={`Remove ${item.product.name}`}>
+                Remove
+              </button>
+            </form>
           </li>
         ))}
       </ul>
