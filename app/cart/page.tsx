@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getCart } from "@/lib/api/cart";
 import { removeItemAction, updateQuantityAction } from "./actions";
@@ -34,12 +35,12 @@ export default async function CartPage() {
       <ul>
         {cart.items.map((item) => (
           <li key={item.productId}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={item.product.images[0]}
               alt={item.product.name}
               width={120}
               height={120}
+              sizes="120px"
             />
             <p>{item.product.name}</p>
             <p>{usd.format(item.product.price / 100)} each</p>

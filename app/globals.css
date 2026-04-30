@@ -1,26 +1,492 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   Vercel Geist tokens — DARK BY DEFAULT
+   Source of truth: .design/project/styles/geist.css.
+   Dark mode is forced (no toggle): we lift the dark overrides up onto :root
+   and skip the data-theme attribute entirely. Accent/spacing/motion/type-scale
+   tokens are mode-agnostic in the design, so they come straight from the
+   light-mode :root block.
+   ============================================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* ---------- Backgrounds & foregrounds (dark) ---------- */
+  --bg-100: #000000;
+  --bg-200: #0a0a0a;
+  --fg-100: #ffffff;
+  --fg-200: #a1a1a1;
+  --fg-300: #707070;
+
+  /* ---------- Color (UI component bg layers) (dark) ---------- */
+  --color-100: #1a1a1a;
+  --color-200: #242424;
+  --color-300: #2e2e2e;
+
+  /* ---------- Border (dark) ---------- */
+  --border-100: #1f1f1f;
+  --border-200: #2a2a2a;
+  --border-300: #3d3d3d;
+
+  /* ---------- High-contrast (dark) ---------- */
+  --contrast-100: #ffffff;
+  --contrast-200: #ededed;
+
+  /* ---------- Accent: Blue (Vercel Blue scale) ---------- */
+  --blue-100: #f1f6fe;
+  --blue-200: #e1edfd;
+  --blue-300: #cfdffb;
+  --blue-400: #a8c7fa;
+  --blue-500: #6ea8fa;
+  --blue-600: #2f7af5;
+  --blue-700: #0070f3; /* canonical Vercel Blue */
+  --blue-800: #0064d6;
+  --blue-900: #0058b8;
+  --blue-1000: #002766;
+
+  /* ---------- Red ---------- */
+  --red-100: #fff0f0;
+  --red-200: #ffe0e0;
+  --red-300: #ffc7c7;
+  --red-400: #ff9b9b;
+  --red-500: #ff6166;
+  --red-600: #ee0000;
+  --red-700: #e00000;
+  --red-800: #c50000;
+  --red-900: #a40000;
+  --red-1000: #5a0000;
+
+  /* ---------- Amber ---------- */
+  --amber-100: #fff8e6;
+  --amber-200: #ffefc7;
+  --amber-300: #ffe39c;
+  --amber-400: #ffd267;
+  --amber-500: #f5b800;
+  --amber-600: #d99e00;
+  --amber-700: #b67c00;
+  --amber-800: #8c5e00;
+  --amber-900: #6b4600;
+  --amber-1000: #2e1c00;
+
+  /* ---------- Green ---------- */
+  --green-100: #effdf4;
+  --green-200: #d8f6e1;
+  --green-300: #a8eebb;
+  --green-400: #5dd87d;
+  --green-500: #1ec268;
+  --green-600: #0aa959;
+  --green-700: #0a8c4d;
+  --green-800: #07703f;
+  --green-900: #055a32;
+  --green-1000: #02240f;
+
+  /* ---------- Teal ---------- */
+  --teal-100: #effefd;
+  --teal-200: #c7faf6;
+  --teal-300: #97f1eb;
+  --teal-400: #4adfd2;
+  --teal-500: #00c2b1;
+  --teal-600: #00a695;
+  --teal-700: #008a7c;
+  --teal-800: #006e63;
+  --teal-900: #00564d;
+  --teal-1000: #001a17;
+
+  /* ---------- Purple ---------- */
+  --purple-100: #f8f3ff;
+  --purple-200: #ede0ff;
+  --purple-300: #dcc4ff;
+  --purple-400: #b993ff;
+  --purple-500: #8e54f7;
+  --purple-600: #7c3aed;
+  --purple-700: #6927d6;
+  --purple-800: #561db4;
+  --purple-900: #43168f;
+  --purple-1000: #1c0640;
+
+  /* ---------- Pink ---------- */
+  --pink-100: #fff0f7;
+  --pink-200: #ffd9eb;
+  --pink-300: #ffb3d6;
+  --pink-400: #ff7ab6;
+  --pink-500: #ff3d96;
+  --pink-600: #f01882;
+  --pink-700: #d10770;
+  --pink-800: #a8025b;
+  --pink-900: #7d0044;
+  --pink-1000: #2c0017;
+
+  /* ---------- Semantic aliases ---------- */
+  --color-success: var(--green-700);
+  --color-success-bg: var(--green-100);
+  --color-warning: var(--amber-700);
+  --color-warning-bg: var(--amber-100);
+  --color-error: var(--red-700);
+  --color-error-bg: var(--red-100);
+  --color-info: var(--blue-700);
+  --color-info-bg: var(--blue-100);
+  --color-link: var(--blue-700);
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ---------- Radii ---------- */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* ---------- Shadows (used sparingly) ---------- */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 8px rgb(0 0 0 / 0.04), 0 2px 4px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 12px 24px rgb(0 0 0 / 0.08), 0 4px 8px rgb(0 0 0 / 0.04);
+  --shadow-menu: 0 8px 16px rgb(0 0 0 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.06);
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.4, 0.1, 0.3, 1);
+  --ease-enter:    cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0.0, 1.0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+
+  /* ---------- Type scale (sans) ---------- */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 40px;
+  --font-size-5xl: 56px;
+  --font-size-6xl: 72px;
+  --font-size-display: 96px;
+
+  --line-tight: 1.1;
+  --line-snug: 1.25;
+  --line-normal: 1.5;
+  --line-relaxed: 1.65;
+
+  --tracking-tight: -0.025em;
+  --tracking-tighter: -0.04em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.08em;
+  /* ---------- shadcn semantic tokens → mapped to Geist (forced dark) ----------
+     shadcn's primitives reference these by name (--background, --primary, etc).
+     Because dark is forced via this :root block, there's no toggle to switch
+     between light/dark — these mappings ARE the theme. Vercel/Geist primary
+     buttons are white-on-black, so --primary uses --fg-100 not Vercel Blue. */
+  --background: var(--bg-100);
+  --foreground: var(--fg-100);
+  --card: var(--bg-100);
+  --card-foreground: var(--fg-100);
+  --popover: var(--bg-100);
+  --popover-foreground: var(--fg-100);
+  --primary: var(--fg-100);
+  --primary-foreground: var(--bg-100);
+  --secondary: var(--color-100);
+  --secondary-foreground: var(--fg-100);
+  --muted: var(--color-100);
+  --muted-foreground: var(--fg-200);
+  --accent: var(--color-100);
+  --accent-foreground: var(--fg-100);
+  --destructive: var(--red-500);
+  --border: var(--border-100);
+  --input: var(--border-200);
+  --ring: var(--blue-700);
+  --radius: 6px;
+  /* Chart + sidebar tokens are unused but kept so any shadcn primitive that
+     references them resolves to a sane neutral instead of `unset`. */
+  --chart-1: var(--blue-500);
+  --chart-2: var(--green-500);
+  --chart-3: var(--amber-500);
+  --chart-4: var(--purple-500);
+  --chart-5: var(--pink-500);
+  --sidebar: var(--bg-200);
+  --sidebar-foreground: var(--fg-100);
+  --sidebar-primary: var(--fg-100);
+  --sidebar-primary-foreground: var(--bg-100);
+  --sidebar-accent: var(--color-100);
+  --sidebar-accent-foreground: var(--fg-100);
+  --sidebar-border: var(--border-100);
+  --sidebar-ring: var(--blue-700);
 }
 
+/* ============================================================================
+   Tailwind v4 @theme — register tokens so utility classes resolve.
+   `--color-*` produces bg-*, text-*, border-*, ring-*, outline-*, etc.
+   `--font-*` produces font-*. Using `inline` keeps the values as live
+   var() references so swapping a CSS variable at runtime would propagate
+   (we don't need that for dark-only, but it costs nothing and keeps the
+   color-scale tokens authoritative).
+   ============================================================================ */
 @theme inline {
-  --color-background: var(--background);
+  /* Surfaces & foregrounds → bg-bg-100, text-fg-200, etc. */
+  --color-bg-100: var(--bg-100);
+  --color-bg-200: var(--bg-200);
+  --color-fg-100: var(--fg-100);
+  --color-fg-200: var(--fg-200);
+  --color-fg-300: var(--fg-300);
+
+  /* UI surface layers → bg-color-100, etc. (Geist's "color" scale) */
+  --color-color-100: var(--color-100);
+  --color-color-200: var(--color-200);
+  --color-color-300: var(--color-300);
+
+  /* Hairlines → border-border-200, etc. */
+  --color-border-100: var(--border-100);
+  --color-border-200: var(--border-200);
+  --color-border-300: var(--border-300);
+
+  /* Accent subset (overrides Tailwind's default blue/green/amber/red so
+     bg-blue-700 = Vercel Blue, not Tailwind's stock blue). */
+  --color-blue-500: var(--blue-500);
+  --color-blue-700: var(--blue-700);
+  --color-green-500: var(--green-500);
+  --color-amber-500: var(--amber-500);
+  --color-red-500: var(--red-500);
+
+  /* Fonts — next/font wires --font-geist-sans on <html>. Geist Mono will
+     follow in a later task (needs a layout.tsx edit, out of scope here),
+     so for now we fall back to the system mono stack. shadcn rewrote
+     --font-sans to a self-reference during init; restoring the chain. */
+  --font-sans: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ============================================================================
+   Base
+   ============================================================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-100);
+  color: var(--fg-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+button { font-family: inherit; }
+
+/* ============================================================================
+   Design utility classes
+   These encode multi-property recipes the design uses repeatedly. They live
+   here (not as Tailwind utilities) because they're fully bespoke composites
+   and the components can just say `class="container"` or `class="skeleton"`.
+   ============================================================================ */
+
+/* Container — fixed max-width, generous gutters that tighten on mobile */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (max-width: 760px) {
+  .container { padding: 0 16px; }
+}
+
+/* Eyebrow — small uppercase mono label used above headings */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-200);
+}
+
+/* Tabular figures — for prices, quantities, line totals */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Subtle dot-grid background for hero / promo blocks */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Spinner — small loading indicator used inside loading-state badges
+   (e.g. the PDP "Checking stock" pill while stock streams). */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--border-300);
+  border-top-color: var(--fg-100);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* Skeleton shimmer — used for Suspense fallbacks */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-100) 0%,
+    var(--color-200) 50%,
+    var(--color-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Ribbon — white-on-black marquee container for the promo banner */
+.ribbon {
+  background: var(--fg-100);
+  color: var(--bg-100);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Marquee track — paired with .ribbon for a left-scrolling promo */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: inline-flex;
+  gap: 48px;
+  animation: marquee 28s linear infinite;
+  padding-right: 48px;
+}
+
+/* Product card — hover-aware surface used by the homepage and search grid.
+   The image-scale-on-hover effect is wired in product-card.tsx via
+   group-hover utilities on the <Image> child; here we just animate the
+   border + carry the chrome. */
+.product-card {
+  background: var(--bg-100);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+}
+.product-card:hover {
+  border-color: var(--border-300);
+}
+.product-img-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--color-100);
+  border-bottom: 1px solid var(--border-100);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

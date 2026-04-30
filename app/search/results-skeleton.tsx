@@ -1,15 +1,16 @@
-// Suspense fallback for <SearchResults />. Renders five placeholder cards so
-// the layout matches the eventual results grid (RESULT_LIMIT = 5) and the
-// surrounding form/header don't shift when results stream in.
+import { ProductCardSkeleton } from "@/components/product/product-card-skeleton";
+
+// Suspense fallback for <SearchResults />. Renders five placeholder cards in
+// a 5-col grid (matching the design's loading state). The 2/3-col steps for
+// narrower viewports keep the cards readable on tablet and mobile.
 export function ResultsSkeleton() {
   return (
-    <ul aria-hidden="true">
+    <ul
+      aria-hidden="true"
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 list-none p-0 m-0"
+    >
       {Array.from({ length: 5 }).map((_, i) => (
-        <li key={i}>
-          <div className="h-40 w-full bg-neutral-100 dark:bg-neutral-900" />
-          <div className="mt-2 h-4 w-3/4 bg-neutral-100 dark:bg-neutral-900" />
-          <div className="mt-1 h-4 w-1/3 bg-neutral-100 dark:bg-neutral-900" />
-        </li>
+        <ProductCardSkeleton key={i} />
       ))}
     </ul>
   );

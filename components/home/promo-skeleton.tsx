@@ -1,11 +1,16 @@
-// Suspense fallback for <PromoBanner />. Reserves vertical space at roughly
-// the banner's resting height so the cached hero + featured grid don't shift
-// when the promo streams in.
+// Suspense fallback for <PromoBanner />. The skeleton mirrors the rendered
+// banner's section chrome (border-b + bg-bg-200 strip) so the layout below
+// doesn't shift when the promo streams in. Inner block uses the .skeleton
+// shimmer class with the same 72px height as the resolved card.
 export function PromoSkeleton() {
   return (
-    <div
+    <section
       aria-hidden="true"
-      className="h-12 w-full bg-neutral-100 dark:bg-neutral-900"
-    />
+      className="border-b border-border-100 bg-bg-200 py-5"
+    >
+      <div className="container">
+        <div className="skeleton h-[72px]" />
+      </div>
+    </section>
   );
 }

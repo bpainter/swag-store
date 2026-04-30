@@ -1,10 +1,14 @@
-// Suspense fallback for <StockBadge />. Reserves a single line of vertical
-// space so the cached product details don't shift when stock streams in.
+import { PillBadge } from "./stock-badge";
+
+// Suspense fallback for <StockBadge />. Renders the "Checking stock"
+// loading-state pill with a small CSS spinner. PillBadge is exported from
+// stock-badge.tsx so the loading and resolved states share the exact same
+// chrome — only the inner content differs.
 export function StockSkeleton() {
   return (
-    <div
-      aria-hidden="true"
-      className="h-5 w-32 bg-neutral-100 dark:bg-neutral-900"
-    />
+    <PillBadge tone="neutral">
+      <span className="spinner" aria-hidden="true" />
+      Checking stock
+    </PillBadge>
   );
 }

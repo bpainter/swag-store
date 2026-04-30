@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { addItem, ensureCart, removeItem, updateItem } from "@/lib/api/cart";
+import { addItem, ensureCart, getCart, removeItem, updateItem } from "@/lib/api/cart";
 
 // FormData values arrive as strings, so quantity is coerced. The 1..100 cap is
 // a defense-in-depth bound — the UI's quantity selector will be tighter still,
@@ -69,6 +69,29 @@ export async function removeItemAction(itemId: string): Promise<void> {
   }
 
   await removeItem(parsed.data.itemId);
+
+  revalidatePath("/cart");
+  revalidatePath("/", "layout");
+}
+
+// Empties the entire cart by removing each item in turn. The API doesn't
+// expose a "clear cart" endpoint, so this is best-effort sequential. If a
+// removal mid-loop fails, the partial state is still consistent (the
+// successful removes have landed); we revalidate at the end either way so
+// the UI reflects whatever the API now reports.
+export async function clearCartAction(): Promise<void> {
+  const cart = await getCart();
+  if (!cart) return;
+
+  for (const item of cart.items) {
+    try {
+      await removeItem(item.productId);
+    } catch {
+      // Swallow per-item errors — the UI revalidation below picks up the
+      // current truth. Throwing here would leave the user with a broken
+      // "Clear cart" button if even one line is already gone server-side.
+    }
+  }
 
   revalidatePath("/cart");
   revalidatePath("/", "layout");

@@ -3,6 +3,8 @@ import { Geist } from "next/font/google";
 import { Suspense } from "react";
 import { Header, HeaderSkeleton } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { PromoRibbon } from "@/components/layout/promo-ribbon";
+import { PromoRibbonSkeleton } from "@/components/layout/promo-ribbon-skeleton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,6 +46,12 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* Promo ribbon sits ABOVE the header — it's the very first visible
+            row. Uncached (the API rotates promos per request), so it streams
+            via Suspense alongside the header below. */}
+        <Suspense fallback={<PromoRibbonSkeleton />}>
+          <PromoRibbon />
+        </Suspense>
         {/* Header reads the cart cookie, so it's dynamic. Suspense lets the
             rest of the page (footer, route content) keep prerendering while
             the header — including the live cart badge — streams in. */}
