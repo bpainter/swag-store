@@ -22,18 +22,45 @@ type Props = {
   params: Promise<{ param: string }>;
 };
 
+// OG description max is ~155 chars; clamp the product blurb so social-card
+// previews never end mid-word with an ellipsis browser-side.
+function truncate(text: string, max = 155): string {
+  if (text.length <= max) return text;
+  // Cut at the last whitespace before the limit so we don't slice through a
+  // word; fall back to a hard cut if the string has no spaces under max.
+  const slice = text.slice(0, max);
+  const cut = slice.lastIndexOf(" ");
+  return (cut > 0 ? slice.slice(0, cut) : slice).trimEnd() + "…";
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // Same await-params pattern: generateMetadata gets a Promise too.
+  // Same await-params pattern: generateMetadata gets a Promise too. The
+  // getProduct() call here shares the same `"use cache"` entry as the call
+  // inside ProductPage — this isn't an extra round-trip.
   const { param } = await params;
   try {
     const product = await getProduct(param);
+    const description = truncate(product.description);
     return {
       title: product.name,
-      description: product.description,
-      openGraph: { images: [product.images[0]] },
+      description,
+      openGraph: {
+        title: product.name,
+        description,
+        // Object form gives the renderer authoritative dimensions so the
+        // crawler doesn't have to fetch the image to compute aspect ratio.
+        images: [
+          {
+            url: product.images[0],
+            width: 600,
+            height: 600,
+            alt: product.name,
+          },
+        ],
+      },
     };
   } catch {
-    return { title: "Product" };
+    return { title: "Product not found" };
   }
 }
 

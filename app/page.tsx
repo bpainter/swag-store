@@ -12,6 +12,8 @@ import { ProductCard } from "@/components/product/product-card";
 import { getFeaturedProducts } from "@/lib/api/products";
 
 export const metadata: Metadata = {
+  // `title: "Home"` runs through the root layout's title.template
+  // (`%s | Vercel Swag Store`), giving "Home | Vercel Swag Store".
   title: "Home",
   description:
     "Premium swag for developers who build with Vercel. Browse hoodies, tees, and tech accessories.",
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
     title: "Home | Vercel Swag Store",
     description:
       "Premium swag for developers who build with Vercel. Browse hoodies, tees, and tech accessories.",
+    images: ["/opengraph-image.png"],
   },
 };
 

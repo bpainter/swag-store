@@ -11,12 +11,9 @@ import { SearchInput } from "./search-input";
 import { SearchResults } from "./search-results";
 
 export const metadata: Metadata = {
+  // `title` runs through the root template ("%s | Vercel Swag Store").
   title: "Search",
   description: "Search the Vercel Swag Store catalog by keyword or category.",
-  openGraph: {
-    title: "Search | Vercel Swag Store",
-    description: "Search the Vercel Swag Store catalog by keyword or category.",
-  },
 };
 
 type Props = {

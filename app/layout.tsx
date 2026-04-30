@@ -12,7 +12,26 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Resolve the absolute origin used to make OG image URLs absolute. Order:
+//   1. NEXT_PUBLIC_SITE_URL — explicit override (set this on a custom domain)
+//   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel's canonical production hostname
+//      (stable across redeploys; only set in production). Bare hostname.
+//   3. VERCEL_URL — the per-deployment hostname (preview + production). Bare
+//      hostname; we prefix `https://` ourselves.
+//   4. http://localhost:3000 — dev fallback
+// Without this, Next emits OG URLs against http://localhost:3000 even in
+// production builds — social cards would 404 every link to a deployed page.
+function resolveSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(resolveSiteUrl()),
   title: {
     default: "Vercel Swag Store",
     template: "%s | Vercel Swag Store",

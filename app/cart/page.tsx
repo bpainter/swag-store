@@ -5,8 +5,9 @@ import { getCart } from "@/lib/api/cart";
 import { removeItemAction, updateQuantityAction } from "./actions";
 
 export const metadata: Metadata = {
+  // `title` runs through the root template ("%s | Vercel Swag Store").
   title: "Cart",
-  description: "Your Vercel Swag Store shopping cart.",
+  description: "Review and manage the items in your Vercel Swag Store cart.",
 };
 
 const usd = new Intl.NumberFormat("en-US", {
