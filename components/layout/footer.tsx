@@ -97,7 +97,7 @@ export function Footer() {
       </div>
 
       {/* Sub-footer divider + copyright + legal links */}
-      <div className="container mt-12 pt-6 border-t border-border-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="container mt-12 pt-6 py-6 border-t border-border-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="font-mono text-[12px] text-fg-300">
           © {YEAR} Vercel Inc. — Built on Vercel.
         </div>

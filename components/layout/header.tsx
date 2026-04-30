@@ -5,14 +5,12 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { getCart } from "@/lib/api/cart";
 
 // Categories surfaced in the desktop nav. We only link to slugs that exist in
-// the API (t-shirts / mugs / accessories) — the design prototype invented its
-// own ("Apparel/Drinkware"), but those wouldn't filter anything on /search.
+// the API (t-shirts / mugs / accessories).
 const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
-  { label: "Shop", href: "/" },
-  { label: "Search", href: "/search" },
   { label: "T-Shirts", href: "/search?category=t-shirts" },
   { label: "Mugs", href: "/search?category=mugs" },
   { label: "Accessories", href: "/search?category=accessories" },
+  { label: "Search", href: "/search" }
 ];
 
 // Inline triangle SVG copied from the design's <Triangle /> helper. Kept tiny
@@ -89,7 +87,7 @@ export async function Header() {
         <div className="ml-auto flex items-center gap-1.5">
           {/* Search-trigger pill — looks like an input, but it's a Link to
               /search. The real search input lives there. */}
-          <Link
+          {/* <Link
             href="/search"
             className="hidden md:inline-flex h-8 min-w-[240px] items-center gap-2 rounded-md border border-border-200 px-3 text-[13px] text-fg-300 hover:border-border-300 hover:text-fg-100 transition-colors"
           >
@@ -98,7 +96,7 @@ export async function Header() {
             <kbd className="ml-auto rounded border border-border-200 px-1.5 py-0.5 font-mono text-[11px] text-fg-300">
               ⌘K
             </kbd>
-          </Link>
+          </Link> */}
 
           <CartIcon cart={cart} />
         </div>

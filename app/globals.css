@@ -334,14 +334,20 @@ button { font-family: inherit; }
    and the components can just say `class="container"` or `class="skeleton"`.
    ============================================================================ */
 
-/* Container — fixed max-width, generous gutters that tighten on mobile */
+/* Container — fixed max-width, generous gutters that tighten on mobile.
+   Set horizontal padding only so callers can compose vertical padding with
+   Tailwind utilities (py-*, pt-*, pb-*) without being overridden. */
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 @media (max-width: 760px) {
-  .container { padding: 0 16px; }
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 /* Eyebrow — small uppercase mono label used above headings */

@@ -13,7 +13,7 @@ import type { Category } from "@/lib/api/types";
 // Sentinel value for the "All categories" option. We can't use an empty
 // string because Base UI's Select treats "" as unset, which conflicts with
 // rendering a placeholder vs. the chosen item.
-const ALL = "__all__";
+const ALL = "All";
 
 export function CategorySelect({
   categories,
@@ -42,7 +42,7 @@ export function CategorySelect({
       value={defaultValue && defaultValue !== "" ? defaultValue : ALL}
       onValueChange={onChange}
     >
-      <SelectTrigger className="h-12 w-full text-sm">
+      <SelectTrigger className="data-[size=default]:h-12 w-full text-sm">
         <SelectValue placeholder="All" />
       </SelectTrigger>
       <SelectContent>

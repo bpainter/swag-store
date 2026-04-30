@@ -15,11 +15,10 @@ import {
 // them in two places risks drift, but co-locating with this client component
 // avoids importing anything server-side into the client bundle.
 const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
-  { label: "Shop", href: "/" },
-  { label: "Search", href: "/search" },
   { label: "T-Shirts", href: "/search?category=t-shirts" },
   { label: "Mugs", href: "/search?category=mugs" },
   { label: "Accessories", href: "/search?category=accessories" },
+  { label: "Search", href: "/search" }
 ];
 
 export function MobileNav() {
