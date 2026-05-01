@@ -4,10 +4,8 @@ import { ArrowRight } from "lucide-react";
 import type { Product } from "@/lib/api/types";
 import { categoryLabel, formatCents } from "@/lib/format";
 
-// Stock prop is OPTIONAL. Search results don't pass it (we won't issue
-// per-product /stock fetches inside the grid; that's a per-request endpoint
-// and would multiply the network cost by N). Homepage may pass it later if
-// we want low-stock badges; for now it's omitted there too.
+// `stock` is opt-in. The search/featured grids skip it because per-product
+// /stock fetches would multiply network cost across the grid.
 export type ProductCardProps = {
   product: Product;
   stock?: { stock: number; lowStock: boolean };
@@ -19,17 +17,11 @@ export function ProductCard({ product, stock }: ProductCardProps) {
 
   return (
     // h-full + flex chain so every card in a row matches the tallest sibling.
-    // CSS grid's default `align-items: stretch` already gives the <li> the row
-    // height; we propagate that down the tree via h-full / flex-1 so the
-    // price + View row can mt-auto to the bottom of every card.
     <li className="list-none h-full">
       <Link
         href={`/products/${product.slug}`}
         className="product-card group flex h-full flex-col text-fg-100 no-underline"
       >
-        {/* Image — fills a 1:1 frame; scales subtly on group-hover. The
-            scale stays inside .product-img-wrap (overflow-hidden) so it
-            never affects layout / triggers reflow on hover. */}
         <div className="product-img-wrap">
           <Image
             src={product.images[0]}
@@ -40,29 +32,21 @@ export function ProductCard({ product, stock }: ProductCardProps) {
           />
         </div>
 
-        {/* Body — grows to fill remaining vertical space. */}
         <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3 pb-[18px]">
-          {/* Top row: category eyebrow + optional stock badge. */}
           <div className="flex items-center justify-between gap-2">
             <span className="eyebrow">{categoryLabel(product.category)}</span>
             {soldOut && <SoldOutBadge />}
             {lowStock && <LowStockBadge />}
           </div>
 
-          {/* Name */}
           <div className="text-[15px] font-medium leading-tight tracking-tight">
             {product.name}
           </div>
 
-          {/* Description — clamped to 2 lines. No min-height: the body's
-              flex-1 + the bottom row's mt-auto absorb the empty space, so
-              short-copy cards stretch via the gap, not via reserved px. */}
           <p className="m-0 line-clamp-2 text-[12px] leading-relaxed text-fg-200">
             {product.description}
           </p>
 
-          {/* Bottom row: price + "View" affordance. mt-auto pushes it to
-              the card's bottom regardless of description length. */}
           <div className="mt-auto flex items-center justify-between">
             <span className="tabular text-[14px] font-medium">
               {formatCents(product.price, product.currency)}
@@ -78,10 +62,6 @@ export function ProductCard({ product, stock }: ProductCardProps) {
   );
 }
 
-// Inline status pills — kept here (not the shadcn Badge primitive) because
-// the design's "dotted pill" pattern needs a tinted bg + colored dot prefix
-// that doesn't map cleanly onto Badge's variants. Cheap to inline, both
-// shapes are nearly identical.
 function SoldOutBadge() {
   return (
     <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/[0.08] px-2 font-mono text-[11px] font-medium uppercase tracking-[0.04em] text-red-500">

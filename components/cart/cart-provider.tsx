@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useOptimistic,
@@ -15,21 +14,14 @@ import type {
   Product,
 } from "@/lib/api/types";
 
-// ---------------------------------------------------------------------------
-// Optimistic action vocabulary
-// ---------------------------------------------------------------------------
-
 export type OptimisticAction =
   | { type: "add"; productId: string; quantity: number; product: Product }
   | { type: "update"; productId: string; quantity: number }
   | { type: "remove"; productId: string }
   | { type: "clear" };
 
-// ---------------------------------------------------------------------------
-// Pure cart helpers — recompute totals after every mutation. These are
-// best-effort approximations of what the server will return; the real cart
-// snapshot from getCart() takes over once the layout re-renders post-action.
-// ---------------------------------------------------------------------------
+// Optimistic helpers approximate what the API will return; the next
+// getCart() snapshot supersedes them once the layout re-renders.
 
 function emptyCart(): CartWithProducts {
   const now = new Date().toISOString();
@@ -145,10 +137,6 @@ function cartReducer(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
-
 type CartContextValue = {
   /** The cart with optimistic updates merged in. */
   cart: CartWithProducts | null;
@@ -172,14 +160,9 @@ export function useCart(): CartContextValue {
   return ctx;
 }
 
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  // baseCart is the authoritative server cart. <CartHydrate /> updates this
-  // every time the layout re-renders post-revalidation, so optimistic state
-  // gets re-based against fresh server truth.
+  // baseCart is the authoritative server cart, hydrated by <CartHydrate />
+  // on every layout re-render (including post-revalidatePath).
   const [baseCart, setBaseCart] = useState<CartWithProducts | null>(null);
   const [optimisticCart, applyOptimistic] = useOptimistic(
     baseCart,
@@ -187,21 +170,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-dismiss the error toast after a few seconds so it doesn't pin
-  // forever if the user doesn't interact.
   useEffect(() => {
     if (!error) return;
     const t = setTimeout(() => setError(null), 4500);
     return () => clearTimeout(t);
   }, [error]);
-
-  // Stable identity for setBaseCart so the hydrate effect doesn't re-fire
-  // on every provider render (state setters are stable, but routing through
-  // useCallback keeps the cross-component contract explicit).
-  const stableSetBaseCart = useCallback(
-    (cart: CartWithProducts | null) => setBaseCart(cart),
-    [],
-  );
 
   return (
     <CartContext.Provider
@@ -210,7 +183,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         applyOptimistic,
         setError,
         error,
-        setBaseCart: stableSetBaseCart,
+        setBaseCart,
       }}
     >
       {children}
@@ -219,33 +192,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// CartHydrate — bridges server-fetched cart into the client provider state.
-// Rendered by <CartHydrator /> (server async) inside a Suspense boundary in
-// the layout. On every layout re-render (e.g. after revalidatePath), this
-// component receives a new `cart` prop and pushes it into baseCart.
-// ---------------------------------------------------------------------------
-
+// Bridges the server-fetched cart from <CartHydrator /> into the provider's
+// useState — re-renders re-base useOptimistic against fresh server truth.
 export function CartHydrate({
   cart,
 }: {
   cart: CartWithProducts | null;
 }) {
   const { setBaseCart } = useCart();
-  // The cart object identity changes on every render even when contents are
-  // equal; this useEffect runs after every prop update, which is exactly
-  // what we want: useOptimistic re-bases off the freshest server snapshot.
   useEffect(() => {
     setBaseCart(cart);
   }, [cart, setBaseCart]);
   return null;
 }
-
-// ---------------------------------------------------------------------------
-// Error toast — bottom-right floating pill. Auto-dismisses via the provider's
-// useEffect. Kept inline (not a separate file) because it has a 1:1
-// relationship with the provider's error state.
-// ---------------------------------------------------------------------------
 
 function CartErrorToast() {
   const { error, setError } = useCart();

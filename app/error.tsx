@@ -2,8 +2,6 @@
 
 import { useEffect } from "react";
 
-// error.tsx MUST be a client component — it uses React's error-boundary
-// machinery (componentDidCatch under the hood) which only runs on the client.
 export default function Error({
   error,
   reset,
@@ -12,15 +10,14 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // In production, swap console.error for your observability tool.
-    // The user-visible message stays generic; the digest links to server logs.
+    // TODO: swap for an observability sink in production.
     console.error(error);
   }, [error]);
 
   return (
     <div>
       <h1>Something went wrong</h1>
-      <p>An unexpected error occurred. Please try again.</p>
+      <p>This page hit an error. Try again, or head back home.</p>
       {process.env.NODE_ENV === "development" && error.message && (
         <pre>{error.message}</pre>
       )}

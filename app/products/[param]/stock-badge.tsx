@@ -1,12 +1,7 @@
 import { getStock } from "@/lib/api/stock";
 
-// Server component, NOT cached — stock can change on every request (per spec).
-// Rendered inside <Suspense> on the PDP so the cached product details paint
-// without waiting on this network round-trip.
-//
-// Returns ONE OF the three resolved states (in stock / low / sold out).
-// The fourth visual state — "Checking stock" with a spinner — is the
-// Suspense fallback rendered by <StockSkeleton />.
+// Stock is uncached per the API spec. The "Checking stock" loading variant
+// lives in <StockSkeleton /> as the Suspense fallback.
 export async function StockBadge({ param }: { param: string }) {
   const stock = await getStock(param);
 
@@ -34,9 +29,6 @@ export async function StockBadge({ param }: { param: string }) {
   );
 }
 
-// Shared pill shell — same chrome the .design uses for .badge.dot variants.
-// Inlined here (not the shadcn Badge) so the dotted-pill pattern with tinted
-// surface + colored dot prefix can be expressed cleanly.
 type Tone = "success" | "warning" | "error" | "neutral";
 
 const TONE_CLASSES: Record<Tone, string> = {

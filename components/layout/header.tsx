@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { CartIcon } from "@/components/cart/cart-icon";
+import { CartButton } from "@/components/cart/cart-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
-// Categories surfaced in the desktop nav. We only link to slugs that exist in
-// the API (t-shirts / mugs / accessories).
+// Slugs match real API categories (t-shirts / mugs / accessories).
 const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
-  { label: "Shop", href: "/" },
-  { label: "Search", href: "/search" },
   { label: "T-Shirts", href: "/search?category=t-shirts" },
   { label: "Mugs", href: "/search?category=mugs" },
   { label: "Accessories", href: "/search?category=accessories" },
+  { label: "Search", href: "/search" },
 ];
 
-// Inline triangle SVG copied from the design's <Triangle /> helper. Kept tiny
-// and inline so the logo renders in the static HTML — no JS, no extra request.
 function TriangleLogo({ size = 20 }: { size?: number }) {
   return (
     <svg
@@ -28,10 +24,6 @@ function TriangleLogo({ size = 20 }: { size?: number }) {
   );
 }
 
-// Sync server component — no longer fetches the cart. The cart badge is now
-// rendered by <CartIcon /> (client), which reads from the CartProvider
-// context populated by <CartHydrator /> at the layout level. Header itself
-// is purely static chrome, so it prerenders into the PPR shell.
 export function Header() {
   return (
     <header
@@ -43,10 +35,8 @@ export function Header() {
       }}
     >
       <div className="container flex h-full items-center gap-6">
-        {/* Mobile menu — visible only below md, sits at the very left edge. */}
         <MobileNav />
 
-        {/* Logo block: triangle + wordmark + Beta pill (Beta hidden on mobile). */}
         <Link
           href="/"
           className="flex items-center gap-2.5 text-fg-100 hover:opacity-90 transition-opacity"
@@ -59,7 +49,6 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav — hidden on mobile (mobile uses MobileNav). */}
         <nav className="hidden md:flex gap-1">
           {NAV_LINKS.map((link) => (
             <Link
@@ -72,12 +61,8 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Right-side cluster: cart icon. The search-trigger pill from the
-            design is intentionally hidden — the search input lives on
-            /search itself, and the desktop pill duplicated that affordance
-            without adding value at the size of this catalog. */}
         <div className="ml-auto flex items-center gap-1.5">
-          <CartIcon />
+          <CartButton />
         </div>
       </div>
     </header>

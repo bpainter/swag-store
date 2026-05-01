@@ -11,11 +11,8 @@ import {
 } from "@/app/cart/actions";
 import { formatCents } from "@/lib/format";
 
-// Client renderer for /cart — consumes the same optimistic cart state as the
-// header badge + drawer, so all three reflect identical truth at all times.
-// The +/- and Remove buttons fire optimistic updates first, then the server
-// action; on error the provider's toast surfaces the failure and the
-// optimistic merge evaporates when the transition ends.
+// Reads from the same CartProvider as the header badge + drawer, so /cart,
+// the drawer, and the badge always show identical state.
 export function CartContents() {
   const { cart, applyOptimistic, setError } = useCart();
   const [isPending, startTransition] = useTransition();
@@ -27,7 +24,7 @@ export function CartContents() {
           Your cart is empty
         </h1>
         <p className="mb-6 text-sm text-fg-200">
-          Browse the catalog and add something you&apos;ll wear with pride.
+          Add something to get started.
         </p>
         <Link
           href="/"

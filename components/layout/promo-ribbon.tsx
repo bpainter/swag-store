@@ -1,14 +1,9 @@
 import { getActivePromotion } from "@/lib/api/promotions";
 
-// Server component, NOT cached — promo rotates per request (per the API spec).
-// Rendered above the Header inside <Suspense> on the root layout so the rest
-// of the page can paint without waiting on this network round-trip.
-//
-// The marquee animation is pure CSS (.marquee-track + @keyframes marquee from
-// globals.css) — no JS, no client island. We render the promo content four
-// times so the loop appears seamless: with `to: translateX(-50%)` each loop
-// resets exactly one full set of repetitions to the left, and the user sees
-// continuous left-scrolling text as long as N copies > the viewport width.
+// Uncached + streamed via <Suspense> at the layout level. Marquee animation
+// is pure CSS (.marquee-track / @keyframes marquee in globals.css). Four
+// repetitions because the keyframe resets at translateX(-50%); two copies
+// would leave a visible gap on wide viewports.
 export async function PromoRibbon() {
   const promo = await getActivePromotion();
   if (!promo) return null;
@@ -34,10 +29,6 @@ export async function PromoRibbon() {
   );
 }
 
-// Tiny inline SVG copied from .design/project/src/shell.jsx (Triangle).
-// Width = 11px, height auto-derived from the design's 76:65 ratio so the
-// triangle stays geometrically correct. Fill is var(--bg-100) so the shape
-// reads as black on the white .ribbon background under our forced dark theme.
 function Triangle() {
   const size = 11;
   return (

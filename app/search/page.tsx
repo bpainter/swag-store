@@ -11,14 +11,11 @@ import { SearchInput } from "./search-input";
 import { SearchResults, isSearchMode } from "./search-results";
 
 export const metadata: Metadata = {
-  // `title` runs through the root template ("%s | Vercel Swag Store").
   title: "Search",
   description: "Search the Vercel Swag Store catalog by keyword or category.",
 };
 
 type Props = {
-  // Async searchParams: in Next.js 16 searchParams is a Promise. Must be
-  // awaited in a server component (or read with `use()` in a client one).
   searchParams: Promise<{ q?: string; category?: string }>;
 };
 
@@ -27,11 +24,9 @@ export default async function SearchPage({ searchParams }: Props) {
   const categories = await getCategories();
   const hasFilter = !!q || !!category;
 
-  // Server-rendered "Search" submit button. Its href mirrors the current URL
-  // params at render time — clicking it navigates to the same URL the user
-  // is already on, so it's effectively a no-op given that SearchInput has
-  // already debounced+pushed any pending query. Keeps the visual three-button
-  // grid intact without requiring a third client island (hard rule).
+  // SearchInput already pushes the URL on debounce/Enter; this static Link
+  // mirrors that target so the visual Search button works without adding a
+  // third client island.
   const buttonHref = hasFilter
     ? `/search?${new URLSearchParams(
         Object.fromEntries(
@@ -42,7 +37,6 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <div className="container pt-10 pb-8">
-      {/* Header block */}
       <div className="eyebrow mb-3">Search</div>
       <h1
         className="m-0 mb-2 font-semibold"
@@ -58,9 +52,6 @@ export default async function SearchPage({ searchParams }: Props) {
         Search by name, category, or material. Results update as you type.
       </p>
 
-      {/* Search row — three children. Layout-only; no <form> wrapper since
-          submission is handled inside SearchInput / CategorySelect via
-          router.push, and the third child is a static Link styled as Button. */}
       <div className="mb-8 grid grid-cols-1 gap-2.5 md:grid-cols-[1fr_200px_auto]">
         <SearchInput defaultValue={q} />
         <CategorySelect categories={categories} defaultValue={category} />
@@ -72,8 +63,6 @@ export default async function SearchPage({ searchParams }: Props) {
         </Link>
       </div>
 
-      {/* State row — left text streams via a tiny SearchCount Suspense; right
-          Clear link only renders when at least one filter is active. */}
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="inline-flex items-center gap-2 text-[13px] text-fg-200">
           <Suspense
@@ -98,10 +87,8 @@ export default async function SearchPage({ searchParams }: Props) {
         )}
       </div>
 
-      {/* Results — same Suspense boundary contract as Phase 4. The `key`
-          forces React to re-suspend on navigation between queries. The
-          skeleton count tracks the active mode: 5 placeholders for active
-          text searches (the assignment cap), 12 for browse mode. */}
+      {/* `key` forces re-suspend on navigation between queries. Skeleton
+          count: 5 (assignment cap) for active searches, 12 for browse. */}
       <Suspense
         key={`${q ?? ""}-${category ?? ""}`}
         fallback={

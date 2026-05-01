@@ -10,12 +10,11 @@ const MIN_AUTO_SUBMIT = 3;
 export function SearchInput({ defaultValue }: { defaultValue?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState<string>(defaultValue ?? "");
+  const [value, setValue] = useState(defaultValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Build /search?q=&category=, preserving any category that's already in
-  // the URL. Reading searchParams here rather than via prop keeps category
-  // and search state independent — typing doesn't clobber the dropdown.
+  // Reading category from useSearchParams (rather than a prop) means typing
+  // never clobbers the dropdown's current value.
   const submit = (q: string) => {
     const params = new URLSearchParams();
     const trimmed = q.trim();
@@ -26,9 +25,8 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
     router.push(qs ? `/search?${qs}` : "/search");
   };
 
-  // Debounced auto-submit. Each keystroke clears the previous timer and
-  // restarts the countdown — only the last quiet 300ms fires the navigation,
-  // and only when the trimmed value is long enough to be a useful query.
+  // Debounced auto-submit; only fires once the trimmed value crosses
+  // MIN_AUTO_SUBMIT.
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (value.trim().length < MIN_AUTO_SUBMIT) return;
@@ -36,8 +34,7 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // submit closes over searchParams + router; both are stable identities
-    // from the hooks. We want to re-arm on value change only.
+    // submit's deps (router, searchParams) are hook-stable; re-arm on value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 

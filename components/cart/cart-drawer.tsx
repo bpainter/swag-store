@@ -19,10 +19,6 @@ const FREE_SHIPPING_THRESHOLD_CENTS = 7500; // $75
 const FLAT_SHIPPING_CENTS = 800; // $8 below the threshold
 const TAX_RATE = 0.08; // estimate; not authoritative
 
-// Slide-in cart drawer. Reads cart state (with optimistic merges) from the
-// CartProvider context — every mutation in <AddToCartForm /> or <CartLine />
-// flows through useOptimistic, so the drawer reflects pending changes
-// instantly without waiting for the server round-trip.
 export function CartDrawer({
   open,
   onOpenChange,
@@ -49,9 +45,6 @@ export function CartDrawer({
 
   const handleClear = () => {
     startTransition(async () => {
-      // Wipe optimistically first so the drawer collapses to the empty
-      // state immediately; the server clear runs in the background and
-      // revalidatePath re-bases the provider state.
       applyOptimistic({ type: "clear" });
       try {
         await clearCartAction();
@@ -70,12 +63,10 @@ export function CartDrawer({
       <SheetContent
         side="right"
         showCloseButton={false}
-        // Drawer width: 440px on desktop, 100vw on phones. The default
-        // SheetContent class includes `data-[side=right]:w-3/4 sm:max-w-sm`
-        // which we override with `!`-prefixed widths.
+        // The default SheetContent classes include `w-3/4 sm:max-w-sm`; we
+        // override with !-prefix to force the design's 440px / 100vw cap.
         className="!w-[min(440px,100vw)] !max-w-[440px] gap-0 bg-bg-100 p-0 text-fg-100 border-l border-border-100"
       >
-        {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-border-100 px-5">
           <div className="flex items-center gap-2.5">
             <ShoppingBag size={16} aria-hidden="true" />
@@ -102,7 +93,6 @@ export function CartDrawer({
         </div>
 
         {isEmpty ? (
-          /* Empty state */
           <div className="flex flex-1 flex-col items-center justify-center px-8 py-10 text-center">
             <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-color-100">
               <ShoppingBag
@@ -124,7 +114,6 @@ export function CartDrawer({
           </div>
         ) : (
           <>
-            {/* Items list — scrollable. */}
             <div className="flex-1 overflow-y-auto">
               {items.map((item) => (
                 <CartLine
@@ -135,7 +124,6 @@ export function CartDrawer({
               ))}
             </div>
 
-            {/* Footer */}
             <div className="flex flex-col gap-3.5 border-t border-border-100 p-5">
               <div className="flex justify-between text-[13px] text-fg-200">
                 <span>Shipping</span>
@@ -162,13 +150,12 @@ export function CartDrawer({
                 </span>
               </div>
 
-              {/* Decorative — checkout flow is out of scope for the cert. */}
+              {/* Decorative — no checkout flow yet. */}
               <Button type="button" size="lg" className="w-full">
                 Checkout
                 <ArrowRight size={14} aria-hidden="true" />
               </Button>
 
-              {/* Clear cart — optimistic, then server-confirmed. */}
               <button
                 type="button"
                 onClick={handleClear}

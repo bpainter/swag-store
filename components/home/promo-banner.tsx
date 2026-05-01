@@ -2,13 +2,8 @@ import { ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getActivePromotion } from "@/lib/api/promotions";
 
-// Server component, NOT cached — promo rotates per request (per the API spec).
-// Rendered inside <Suspense> on the homepage so the cached hero + featured
-// grid can paint without waiting on this network round-trip.
-//
-// Wrapped in its own <section> so the page composes vertically: hero block →
-// promo strip → featured grid → brand strip. The bg-bg-200 strip + a hairline
-// border below visually separates it from the hero.
+// Uncached: the API rotates promos per request. Streamed via <Suspense> on
+// the homepage so the cached sections can paint without waiting.
 export async function PromoBanner() {
   const promo = await getActivePromotion();
   if (!promo) return null;
@@ -26,7 +21,6 @@ export async function PromoBanner() {
               "linear-gradient(90deg, rgba(0,112,243,0.08), rgba(0,112,243,0) 60%)",
           }}
         >
-          {/* Left: blue square with Zap icon */}
           <span
             aria-hidden="true"
             className="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white"
@@ -34,7 +28,6 @@ export async function PromoBanner() {
             <Zap size={18} />
           </span>
 
-          {/* Middle: eyebrow row + title + description */}
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2.5">
               <span className="eyebrow text-blue-500">{promo.code}</span>
@@ -52,9 +45,7 @@ export async function PromoBanner() {
             </div>
           </div>
 
-          {/* Right: % off CTA. Visual only — the wrapping <a> is the click
-              target (this is a server component; tagging another anchor here
-              would nest invalidly). */}
+          {/* Visual only — the wrapping <a> is the click target. */}
           <Button
             variant="outline"
             size="sm"

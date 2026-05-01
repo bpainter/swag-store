@@ -11,9 +11,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-// Same set of categories the desktop nav surfaces — see header.tsx. Keeping
-// them in two places risks drift, but co-locating with this client component
-// avoids importing anything server-side into the client bundle.
+// Mirror of the desktop nav (header.tsx). Duplicated to keep this client
+// component free of server imports.
 const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
   { label: "T-Shirts", href: "/search?category=t-shirts" },
   { label: "Mugs", href: "/search?category=mugs" },
@@ -24,11 +23,6 @@ const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
 export function MobileNav() {
   const [open, setOpen] = useState(false);
 
-  // shadcn's "base-nova" style is built on Base UI (@base-ui/react/dialog),
-  // not Radix — Base UI's Dialog.Trigger doesn't support `asChild`, so we
-  // let SheetTrigger render its own <button> and pass styling/props through.
-  // Each link in the sheet calls setOpen(false) on click to close the sheet
-  // before the navigation completes.
   const close = () => setOpen(false);
 
   return (

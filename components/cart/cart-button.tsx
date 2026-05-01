@@ -5,10 +5,6 @@ import { ShoppingBag } from "lucide-react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { useCart } from "@/components/cart/cart-provider";
 
-// Client island that owns the drawer's open/closed state and renders the
-// header cart icon + badge. Reads the cart (with optimistic merges) from the
-// CartProvider context — clicks in <AddToCartForm /> bump that state instantly,
-// so the badge updates with no perceptible delay.
 export function CartButton() {
   const [open, setOpen] = useState(false);
   const { cart } = useCart();

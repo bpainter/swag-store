@@ -3,18 +3,12 @@ import { SearchX } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { searchProducts } from "@/lib/api/products";
 
-// The assignment caps "search" results (active text query) at 5. The "default
-// state" — no query — is meant to be a browseable selection, so we ask the
-// API for a generous page of products instead. Category-only views are
-// treated as browsing too: "/search?category=mugs" should show all mugs, not
-// the first 5.
+// The 5-cap is the assignment's "Search Results" rule (active text query
+// only, PDF page 6). Browse mode — empty q, with or without a category —
+// shows the full first page.
 const SEARCH_LIMIT = 5;
 const BROWSE_LIMIT = 24;
 
-// Normalize the URL inputs into a single shape both this component and
-// SearchCount can rely on. "All" (case-insensitive) is the CategorySelect
-// sentinel for "no category" — strip it so the API isn't called with
-// `category=all` (which would 0-result).
 function normalizeFilters(q?: string, category?: string) {
   const cleanQ = q?.trim() || undefined;
   const cleanCategory =
@@ -22,9 +16,6 @@ function normalizeFilters(q?: string, category?: string) {
   return { q: cleanQ, category: cleanCategory };
 }
 
-// Resolve which mode this render is in. Only an active TEXT query triggers
-// search-mode (the 5-cap). Category-only filtering keeps browse semantics
-// per the assignment spec on PDF page 6.
 export function isSearchMode(q?: string, category?: string): boolean {
   const { q: cleanQ } = normalizeFilters(q, category);
   return !!cleanQ;
@@ -34,14 +25,8 @@ export function searchLimit(q?: string, category?: string): number {
   return isSearchMode(q, category) ? SEARCH_LIMIT : BROWSE_LIMIT;
 }
 
-// Server component, called from inside <Suspense> on /search. searchProducts
-// is "use cache" keyed on its params — <SearchCount> calls it too with the
-// same normalized params, so the cache layer dedupes the two calls to one
-// round-trip per request.
-//
-// Stock badges are intentionally omitted: per-product /stock fetches would
-// multiply network cost across the result set with little UX payoff. The
-// PDP shows stock for the one product the user actually clicks into.
+// Stock badges are intentionally omitted; per-product /stock fetches would
+// multiply network cost across the result set.
 export async function SearchResults({
   q,
   category,
@@ -55,10 +40,8 @@ export async function SearchResults({
 
   const { products } = await searchProducts({ ...filters, limit });
 
-  // Empty-state only fires for active text searches — browse-mode "no
-  // results" should be near-impossible (would require an empty catalog
-  // entirely), so the friendly empty card is reserved for the case the
-  // user actually typed something that matched nothing.
+  // Browse-mode never shows the empty card — that would only fire on an
+  // empty catalog, which is a different problem to surface differently.
   if (isSearch && products.length === 0) {
     return <EmptyState q={filters.q} />;
   }
@@ -72,8 +55,6 @@ export async function SearchResults({
   );
 }
 
-// Empty-state card — only renders when the user has typed a query and got
-// nothing back.
 function EmptyState({ q }: { q?: string }) {
   const SUGGESTIONS = ["hoodie", "pin", "mug", "tee"] as const;
   return (
@@ -81,11 +62,11 @@ function EmptyState({ q }: { q?: string }) {
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-color-100">
         <SearchX size={22} aria-hidden="true" className="text-fg-300" />
       </div>
-      <h3 className="m-0 mb-2 text-xl font-semibold">No matches found</h3>
+      <h3 className="m-0 mb-2 text-xl font-semibold">No matches</h3>
       <p className="mx-auto mb-5 max-w-[360px] text-sm text-fg-200">
-        We couldn&apos;t find anything for{" "}
+        Nothing matched{" "}
         {q ? <strong className="text-fg-100">&ldquo;{q}&rdquo;</strong> : <>that filter</>}.
-        Try a different keyword or browse a category.
+        Try a different keyword or category.
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         {SUGGESTIONS.map((suggestion) => (

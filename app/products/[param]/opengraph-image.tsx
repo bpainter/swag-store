@@ -3,11 +3,8 @@ import { getProduct } from "@/lib/api/products";
 import { isApi404 } from "@/lib/api/client";
 import { categoryLabel } from "@/lib/format";
 
-// Per-product OG image, file-routed under [param]/. Overrides the root
-// app/opengraph-image.tsx for any route under /products/. The handler
-// awaits the same async params as the page itself; getProduct() shares the
-// `"use cache"` entry with the page + generateMetadata, so this isn't an
-// extra round-trip — we hit the same cache the page already warmed.
+// getProduct() shares its "use cache" entry with the page + generateMetadata,
+// so the per-product OG isn't an extra fetch.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Product";
@@ -19,8 +16,7 @@ const FG = "#ffffff";
 const MUTED = "#a1a1a1";
 const BORDER = "#2a2a2a";
 
-// Brand fallback shown when the product 404s — gives the crawler a sensible
-// canvas instead of an error or empty card.
+// Shown when the product 404s — keeps the crawler from getting an error.
 function brandFallback() {
   return new ImageResponse(
     (
@@ -70,9 +66,6 @@ export default async function OG({ params }: Props) {
           gap: 56,
         }}
       >
-        {/* Left: category eyebrow + product name. flex-column with
-            justifyContent: center vertically centers the title block in
-            the canvas. */}
         <div
           style={{
             flex: 1,
@@ -106,9 +99,6 @@ export default async function OG({ params }: Props) {
           </div>
         </div>
 
-        {/* Right: 470×470 product image card. Satori fetches the remote
-            image and inlines it; the API's blob host is whitelisted in
-            next.config.ts already. */}
         <div
           style={{
             display: "flex",

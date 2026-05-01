@@ -8,33 +8,22 @@ import { addToCartAction } from "@/app/cart/actions";
 import { formatCents } from "@/lib/format";
 import type { Product } from "@/lib/api/types";
 
-// Optimistic-aware Add-to-cart form. Wraps the existing addToCartAction in a
-// transition that:
-//   1. Applies the optimistic mutation via the CartProvider's reducer — so
-//      the header badge + drawer reflect the new item before the round-trip
-//      completes.
-//   2. Calls the server action.
-//   3. On error: surfaces a toast via the provider; useOptimistic's pending
-//      state evaporates automatically when the transition ends, so the badge
-//      reverts to the real server cart.
 export function AddToCartForm({
   product,
   stock,
 }: {
-  // Full product so the optimistic reducer can construct a synthetic line
-  // item without an extra fetch on the client.
+  // Full Product (not just an id) so the optimistic reducer can build a
+  // synthetic line item without a client-side fetch.
   product: Product;
   stock: number;
 }) {
   const outOfStock = stock === 0;
   const max = Math.max(1, stock);
-  const [qty, setQty] = useState<number>(1);
+  const [qty, setQty] = useState(1);
   const [success, setSuccess] = useState<string | null>(null);
   const { applyOptimistic, setError } = useCart();
   const [isPending, startTransition] = useTransition();
 
-  // Clamp helpers — stepper buttons + manual edit all funnel through these
-  // so 0/negatives/over-stock never reach the server action.
   const setClamped = (n: number) => setQty(Math.max(1, Math.min(max, n)));
   const dec = () => setClamped(qty - 1);
   const inc = () => setClamped(qty + 1);
@@ -67,7 +56,6 @@ export function AddToCartForm({
       <input type="hidden" name="productId" value={product.id} />
 
       <div className="flex items-stretch gap-2.5">
-        {/* Quantity stepper — single bordered group containing − / input / +. */}
         <div className="inline-flex h-11 items-stretch overflow-hidden rounded-md border border-border-200">
           <button
             type="button"
@@ -89,8 +77,8 @@ export function AddToCartForm({
               setClamped(Number.isFinite(next) ? next : 1);
             }}
             disabled={outOfStock || isPending}
-            // tabular + mono + center; native spin buttons hidden via
-            // [appearance:textfield] so the layout doesn't shift on focus.
+            // [appearance:textfield] hides the native spin buttons so focus
+            // doesn't shift the layout.
             className="tabular w-12 border-x border-border-200 bg-transparent text-center text-sm text-fg-100 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none disabled:opacity-50"
           />
           <button
@@ -124,7 +112,7 @@ export function AddToCartForm({
               )}
         </Button>
 
-        {/* Decorative save/bookmark — no behavior; icon-only outline button. */}
+        {/* Decorative — no save-for-later flow yet. */}
         <Button
           type="button"
           variant="outline"

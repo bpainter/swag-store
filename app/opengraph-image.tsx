@@ -1,18 +1,11 @@
 import { ImageResponse } from "next/og";
 
-// Next.js metadata file convention. Placing this at app/ generates the OG
-// image for every route that doesn't override it (the PDP overrides via its
-// own opengraph-image.tsx). The compiled output is served at
-// `/opengraph-image.png` — the same path app/page.tsx references in its
-// metadata, so the social-card pipeline lights up automatically.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Vercel Swag Store — premium swag for developers";
+export const alt = "Vercel Swag Store";
 
-// ImageResponse runs Satori under the hood; every container with multiple
-// children must declare `display: flex` (or block) explicitly or the layout
-// engine errors out. We keep the layout deliberately simple: dark canvas,
-// white triangle, wordmark — no font fetch, no remote assets.
+// Satori (used by ImageResponse) requires display: flex on any container with
+// multiple children.
 export default async function OG() {
   return new ImageResponse(
     (

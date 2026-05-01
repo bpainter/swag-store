@@ -12,31 +12,21 @@ import { ProductCard } from "@/components/product/product-card";
 import { getFeaturedProducts } from "@/lib/api/products";
 
 export const metadata: Metadata = {
-  // `title: "Home"` runs through the root layout's title.template
-  // (`%s | Vercel Swag Store`), giving "Home | Vercel Swag Store".
   title: "Home",
-  description:
-    "Premium swag for developers who build with Vercel. Browse hoodies, tees, and tech accessories.",
+  description: "Hoodies, tees, mugs, and tech gear for the people who ship.",
   openGraph: {
     title: "Home | Vercel Swag Store",
-    description:
-      "Premium swag for developers who build with Vercel. Browse hoodies, tees, and tech accessories.",
+    description: "Hoodies, tees, mugs, and tech gear for the people who ship.",
     images: ["/opengraph-image.png"],
   },
 };
 
 export default async function HomePage() {
-  // getFeaturedProducts is "use cache" + cacheLife("hours"). HeroVisual also
-  // calls it; both calls share the cache entry within the request. No extra
-  // round-trip — same reason getProduct/generateMetadata can both call the
-  // same fetcher cheaply on the PDP.
+  // HeroVisual calls getFeaturedProducts too; both share the same `"use cache"`
+  // entry within this request, so it's not an extra round-trip.
   const featured = await getFeaturedProducts();
   const featuredGrid = featured.slice(0, 8);
-  // CTA target: the second featured product (or first as fallback) — picks
-  // a guaranteed-real slug rather than hardcoding one that might not exist.
   const heroCta = featured[1] ?? featured[0];
-  // Brand-strip image: pick a third product for visual variety, falling back
-  // to whatever's available so we never render an empty <Image>.
   const brandImage =
     featured[2]?.images[0] ??
     featured[1]?.images[0] ??
@@ -45,11 +35,9 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ───────────── Hero ───────────── */}
       <section className="dot-grid relative overflow-hidden border-b border-border-100 pt-20 pb-24">
         <div className="container grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 items-center">
           <div>
-            {/* "New drop" announcement chip */}
             <div className="inline-flex items-center gap-2.5 rounded-full border border-border-200 bg-black/40 pl-1.5 pr-3 py-1 text-xs">
               <Badge variant="secondary">New drop</Badge>
               <span className="text-fg-200">
@@ -80,9 +68,8 @@ export default async function HomePage() {
               Geist and made in small batches. Wear what you ship.
             </p>
 
-            {/* Base-UI-flavored shadcn Button doesn't accept asChild — using
-                buttonVariants() to style native Links keeps a11y correct
-                (one anchor, no nested button) and matches the design size. */}
+            {/* Base UI's Button doesn't take asChild; styling the Link with
+                buttonVariants() is the asChild substitute. */}
             <div className="flex flex-wrap gap-2.5">
               <Link
                 href="/search"
@@ -101,7 +88,6 @@ export default async function HomePage() {
               )}
             </div>
 
-            {/* Trust row — three small inline icons + microcopy */}
             <div className="mt-10 flex flex-wrap gap-x-7 gap-y-2 text-[12px] text-fg-200">
               <span className="inline-flex items-center gap-2">
                 <Truck size={14} aria-hidden="true" />
@@ -118,17 +104,14 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Right: featured-product visual stack. Hidden below lg. */}
           <HeroVisual />
         </div>
       </section>
 
-      {/* ───────────── Promo banner (Suspense, dynamic) ───────────── */}
       <Suspense fallback={<PromoSkeleton />}>
         <PromoBanner />
       </Suspense>
 
-      {/* ───────────── Featured grid ───────────── */}
       <section className="py-20">
         <div className="container">
           <div className="mb-8 flex items-end justify-between gap-4">
@@ -161,7 +144,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ───────────── Brand strip ───────────── */}
       <section className="pt-24 pb-8">
         <div className="container">
           <div
@@ -208,11 +190,6 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-            {/* Square, capped at 460px so it sits slightly taller than the
-                text column on desktop without overpowering it. On mobile the
-                column stacks; max-w-sm + mx-auto keeps the image centered
-                and prevents it from going full-width. justify-self-end on
-                desktop nudges it to the right edge of its grid column. */}
             <div className="relative aspect-square w-full max-w-sm mx-auto lg:max-w-[460px] lg:mx-0 lg:justify-self-end overflow-hidden rounded-lg border border-border-100">
               {brandImage && (
                 <Image

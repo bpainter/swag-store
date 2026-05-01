@@ -14,15 +14,8 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-// Resolve the absolute origin used to make OG image URLs absolute. Order:
-//   1. NEXT_PUBLIC_SITE_URL — explicit override (set this on a custom domain)
-//   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel's canonical production hostname
-//      (stable across redeploys; only set in production). Bare hostname.
-//   3. VERCEL_URL — the per-deployment hostname (preview + production). Bare
-//      hostname; we prefix `https://` ourselves.
-//   4. http://localhost:3000 — dev fallback
-// Without this, Next emits OG URLs against http://localhost:3000 even in
-// production builds — social cards would 404 every link to a deployed page.
+// Origin used to absolutize OG image URLs. Without metadataBase, Next falls
+// back to localhost — social cards on production would 404.
 function resolveSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
@@ -39,11 +32,11 @@ export const metadata: Metadata = {
     template: "%s | Vercel Swag Store",
   },
   description:
-    "Premium swag for developers who build with Vercel. From tees to tech gear, represent the tools you love.",
+    "Goods for the people who ship the web. Tees, hoodies, and tech accessories.",
   openGraph: {
     title: "Vercel Swag Store",
     description:
-      "Premium swag for developers who build with Vercel. From tees to tech gear, represent the tools you love.",
+      "Goods for the people who ship the web. Tees, hoodies, and tech accessories.",
     type: "website",
     siteName: "Vercel Swag Store",
   },
@@ -67,23 +60,16 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        {/* CartProvider holds the optimistic cart state for the whole app.
-            <CartHydrator /> (server) fetches the real cart inside its own
-            Suspense boundary and pipes it into the provider via <CartHydrate />
-            — this keeps the layout shell static (PPR survives) while still
-            getting the cart data into client cart-aware components. */}
         <CartProvider>
+          {/* CartHydrator (server) is the only dynamic leaf at the layout
+              level — its Suspense boundary keeps the rest of the shell
+              prerenderable. */}
           <Suspense fallback={null}>
             <CartHydrator />
           </Suspense>
-          {/* Promo ribbon sits ABOVE the header — it's the very first
-              visible row. Uncached (the API rotates promos per request), so
-              it streams via Suspense alongside the rest. */}
           <Suspense fallback={<PromoRibbonSkeleton />}>
             <PromoRibbon />
           </Suspense>
-          {/* Header is now sync — the cart badge inside it reads from the
-              client provider, not from a server fetch in the header tree. */}
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

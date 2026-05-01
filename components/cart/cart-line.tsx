@@ -12,12 +12,6 @@ import {
 import type { CartItemWithProduct } from "@/lib/api/types";
 import { formatCents } from "@/lib/format";
 
-// Single drawer line — image, name, price-each, qty stepper, remove, line
-// total. Lives inside the client drawer so it can close the drawer when the
-// user clicks through to a PDP. Mutations apply optimistic state first, then
-// hit the server action; on error the provider's toast surfaces the failure
-// and the optimistic merge evaporates when the transition ends, leaving the
-// real server state intact.
 export function CartLine({
   item,
   onClose,
@@ -30,8 +24,7 @@ export function CartLine({
   const [isPending, startTransition] = useTransition();
 
   const adjust = (nextQty: number) => {
-    // Quantity changes: <=0 collapses to remove via the reducer + the
-    // server action's own zero-quantity branch.
+    // qty=0 collapses to remove in both the reducer and the server action.
     startTransition(async () => {
       applyOptimistic({
         type: "update",
@@ -61,7 +54,6 @@ export function CartLine({
 
   return (
     <div className="grid grid-cols-[72px_1fr_auto] items-start gap-3.5 border-t border-border-100 px-5 py-4 first:border-t-0">
-      {/* Thumbnail — 72×72 framed image; closes the drawer on click. */}
       <Link
         href={productHref}
         onClick={onClose}
@@ -77,7 +69,6 @@ export function CartLine({
         />
       </Link>
 
-      {/* Middle column: name + per-unit price + stepper / remove row. */}
       <div>
         <Link
           href={productHref}
@@ -91,16 +82,11 @@ export function CartLine({
         </div>
 
         <div className="mt-2.5 flex items-center gap-3">
-          {/* Qty stepper — tighter (28px tall) than the PDP's 44px version. */}
           <div className="inline-flex h-7 items-stretch overflow-hidden rounded-md border border-border-200">
             <button
               type="button"
               onClick={() => adjust(item.quantity - 1)}
               disabled={isPending}
-              // At qty=1, clicking − sends quantity=0; the reducer collapses
-              // to remove and the server action's zero-quantity branch
-              // deletes the line. Lets users empty a row from the stepper
-              // without reaching for the explicit Remove button.
               aria-label={
                 item.quantity > 1
                   ? `Decrease ${item.product.name}`
@@ -127,7 +113,6 @@ export function CartLine({
             </button>
           </div>
 
-          {/* Remove — text-button with trash icon. */}
           <button
             type="button"
             onClick={remove}
@@ -140,7 +125,6 @@ export function CartLine({
         </div>
       </div>
 
-      {/* Right column: line total. */}
       <div className="tabular text-[14px] font-medium">
         {formatCents(item.lineTotal, item.product.currency)}
       </div>

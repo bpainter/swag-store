@@ -4,9 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { addItem, ensureCart, getCart, removeItem, updateItem } from "@/lib/api/cart";
 
-// FormData values arrive as strings, so quantity is coerced. The 1..100 cap is
-// a defense-in-depth bound — the UI's quantity selector will be tighter still,
-// but server actions are public endpoints and must validate on their own.
+// Server actions are public endpoints; the 1..100 cap is defense-in-depth
+// regardless of what the UI sends.
 const AddSchema = z.object({
   productId: z.string().min(1),
   quantity: z.coerce.number().int().min(1).max(100),
@@ -34,8 +33,6 @@ export async function addToCartAction(
   return { success: true };
 }
 
-// updateQuantity / remove are called directly from form actions or click
-// handlers (no useActionState wrapper), so they don't take a prev-state arg.
 const UpdateSchema = z.object({
   itemId: z.string().min(1),
   quantity: z.number().int().min(0),
@@ -74,11 +71,9 @@ export async function removeItemAction(itemId: string): Promise<void> {
   revalidatePath("/", "layout");
 }
 
-// Empties the entire cart by removing each item in turn. The API doesn't
-// expose a "clear cart" endpoint, so this is best-effort sequential. If a
-// removal mid-loop fails, the partial state is still consistent (the
-// successful removes have landed); we revalidate at the end either way so
-// the UI reflects whatever the API now reports.
+// The API has no bulk-clear endpoint; remove one at a time. Per-item errors
+// are swallowed so a partial-clear state still ends up consistent after
+// revalidation.
 export async function clearCartAction(): Promise<void> {
   const cart = await getCart();
   if (!cart) return;
@@ -87,9 +82,7 @@ export async function clearCartAction(): Promise<void> {
     try {
       await removeItem(item.productId);
     } catch {
-      // Swallow per-item errors — the UI revalidation below picks up the
-      // current truth. Throwing here would leave the user with a broken
-      // "Clear cart" button if even one line is already gone server-side.
+      // see top-of-function comment
     }
   }
 

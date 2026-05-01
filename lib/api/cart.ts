@@ -5,10 +5,6 @@ import type { CartWithProducts } from "@/lib/api/types";
 
 const CART_COOKIE = "cart_token";
 
-// ---------------------------------------------------------------------------
-// Cookie helpers
-// ---------------------------------------------------------------------------
-
 async function getCartToken(): Promise<string | null> {
   return (await cookies()).get(CART_COOKIE)?.value ?? null;
 }
@@ -27,10 +23,6 @@ async function clearCartToken(): Promise<void> {
   (await cookies()).delete(CART_COOKIE);
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
 /**
  * Returns the current cart, or null if no cart token exists or the cart has
  * expired (404). Other errors are rethrown.
@@ -46,7 +38,7 @@ export async function getCart(): Promise<CartWithProducts | null> {
     return data;
   } catch (err) {
     if (isApi404(err)) {
-      // Cart expired (24h inactivity) — clear the stale cookie and signal "no cart"
+      // Cart expired (24h inactivity) — clear the stale cookie.
       await clearCartToken();
       return null;
     }
@@ -68,7 +60,6 @@ export async function ensureCart(): Promise<CartWithProducts> {
   const existing = await getCart();
   if (existing) return existing;
 
-  // Create a new cart. The token comes back in x-cart-token response header.
   const result = await swagFetch<CartWithProducts>("/cart/create", {
     method: "POST",
   });
@@ -93,7 +84,6 @@ export async function addItem(
   productId: string,
   quantity: number,
 ): Promise<CartWithProducts> {
-  // ensureCart() also handles the cookie — must be in a Server Action context.
   await ensureCart();
   const token = await getCartToken();
   if (!token) throw new Error("Cart token missing after ensureCart — this should never happen.");

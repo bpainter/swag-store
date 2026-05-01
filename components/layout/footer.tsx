@@ -1,8 +1,5 @@
-// Server component. No interactivity, no data fetch — pure markup.
 const YEAR = new Date().getFullYear();
 
-// Same triangle SVG as the Header; inlined here so the footer doesn't have
-// to import a shared helper just for one logo.
 function TriangleLogo({ size = 20 }: { size?: number }) {
   return (
     <svg
@@ -20,9 +17,8 @@ function TriangleLogo({ size = 20 }: { size?: number }) {
 type FooterLink = { label: string; href: string; external?: boolean };
 type FooterColumn = { title: string; links: FooterLink[] };
 
-// Shop and Help link to "#" — the assignment doesn't include those flows, so
-// rendering them as placeholder anchors keeps the visual fidelity without
-// pretending they navigate anywhere. Vercel column points at the real URLs.
+// Shop and Help links resolve to "#" — those flows aren't part of the cert
+// scope. Only the Vercel column points at real URLs.
 const COLUMNS: FooterColumn[] = [
   {
     title: "Shop",
@@ -59,9 +55,8 @@ const COLUMNS: FooterColumn[] = [
 
 export function Footer() {
   return (
-    <footer className="mt-24 pt-12 pb-16 border-t border-border-100">
-      <div className="container grid grid-cols-1 md:grid-cols-[1.4fr_repeat(3,1fr)] gap-8">
-        {/* Column 1: brand + tagline */}
+    <footer className="mt-24 pt-12 pb-12 border-t border-border-100">
+      <div className="container pb-12 grid grid-cols-1 md:grid-cols-[1.4fr_repeat(3,1fr)] gap-8">
         <div>
           <div className="flex items-center gap-2.5 text-fg-100">
             <TriangleLogo size={20} />
@@ -73,7 +68,6 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Columns 2-4: link groups */}
         {COLUMNS.map((col) => (
           <div key={col.title}>
             <div className="eyebrow mb-3.5">{col.title}</div>
@@ -96,7 +90,6 @@ export function Footer() {
         ))}
       </div>
 
-      {/* Sub-footer divider + copyright + legal links */}
       <div className="container mt-12 pt-6 py-6 border-t border-border-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="font-mono text-[12px] text-fg-300">
           © {YEAR} Vercel Inc. — Built on Vercel.
