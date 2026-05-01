@@ -18,12 +18,18 @@ export function ProductCard({ product, stock }: ProductCardProps) {
   const lowStock = !!stock && stock.stock > 0 && stock.lowStock;
 
   return (
-    <li className="list-none">
+    // h-full + flex chain so every card in a row matches the tallest sibling.
+    // CSS grid's default `align-items: stretch` already gives the <li> the row
+    // height; we propagate that down the tree via h-full / flex-1 so the
+    // price + View row can mt-auto to the bottom of every card.
+    <li className="list-none h-full">
       <Link
         href={`/products/${product.slug}`}
-        className="product-card group block text-fg-100 no-underline"
+        className="product-card group flex h-full flex-col text-fg-100 no-underline"
       >
-        {/* Image — fills a 1:1 frame; scales subtly on group-hover. */}
+        {/* Image — fills a 1:1 frame; scales subtly on group-hover. The
+            scale stays inside .product-img-wrap (overflow-hidden) so it
+            never affects layout / triggers reflow on hover. */}
         <div className="product-img-wrap">
           <Image
             src={product.images[0]}
@@ -34,8 +40,8 @@ export function ProductCard({ product, stock }: ProductCardProps) {
           />
         </div>
 
-        {/* Body */}
-        <div className="flex flex-col gap-1.5 p-4 pt-3 pb-[18px]">
+        {/* Body — grows to fill remaining vertical space. */}
+        <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3 pb-[18px]">
           {/* Top row: category eyebrow + optional stock badge. */}
           <div className="flex items-center justify-between gap-2">
             <span className="eyebrow">{categoryLabel(product.category)}</span>
@@ -48,14 +54,16 @@ export function ProductCard({ product, stock }: ProductCardProps) {
             {product.name}
           </div>
 
-          {/* Description — clamped to 2 lines; min-h reserves space so cards
-              with shorter copy don't shrink below the typical card height. */}
-          <p className="m-0 line-clamp-2 min-h-9 text-[12px] leading-relaxed text-fg-200">
+          {/* Description — clamped to 2 lines. No min-height: the body's
+              flex-1 + the bottom row's mt-auto absorb the empty space, so
+              short-copy cards stretch via the gap, not via reserved px. */}
+          <p className="m-0 line-clamp-2 text-[12px] leading-relaxed text-fg-200">
             {product.description}
           </p>
 
-          {/* Bottom row: price + "View" affordance. */}
-          <div className="mt-1 flex items-center justify-between">
+          {/* Bottom row: price + "View" affordance. mt-auto pushes it to
+              the card's bottom regardless of description length. */}
+          <div className="mt-auto flex items-center justify-between">
             <span className="tabular text-[14px] font-medium">
               {formatCents(product.price, product.currency)}
             </span>
