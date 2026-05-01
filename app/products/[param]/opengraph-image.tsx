@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getProduct } from "@/lib/api/products";
 import { isApi404 } from "@/lib/api/client";
+import { categoryLabel } from "@/lib/format";
 
 // Per-product OG image, file-routed under [param]/. Overrides the root
 // app/opengraph-image.tsx for any route under /products/. The handler
@@ -90,7 +91,7 @@ export default async function OG({ params }: Props) {
               marginBottom: 28,
             }}
           >
-            {product.category}
+            {categoryLabel(product.category)}
           </div>
           <div
             style={{

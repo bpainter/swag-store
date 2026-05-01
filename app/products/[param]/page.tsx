@@ -13,7 +13,7 @@ import {
 import { isApi404 } from "@/lib/api/client";
 import { getProduct } from "@/lib/api/products";
 import { getStock } from "@/lib/api/stock";
-import { formatCents } from "@/lib/format";
+import { categoryLabel, formatCents } from "@/lib/format";
 import { AddToCartForm } from "./add-to-cart-form";
 import { StockBadge } from "./stock-badge";
 import { StockSkeleton } from "./stock-skeleton";
@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: Props) {
           href={`/search?category=${encodeURIComponent(product.category)}`}
           className="text-fg-200 hover:text-fg-100 transition-colors"
         >
-          {product.category}
+          {categoryLabel(product.category)}
         </Link>
         <ChevronRight size={12} aria-hidden="true" />
         <span className="text-fg-100">{product.name}</span>
@@ -174,7 +174,7 @@ export default async function ProductPage({ params }: Props) {
         <div>
           {/* Top metadata row */}
           <div className="mb-3.5 flex items-center gap-2.5">
-            <span className="eyebrow">{product.category}</span>
+            <span className="eyebrow">{categoryLabel(product.category)}</span>
             <span
               aria-hidden="true"
               className="inline-block h-[3px] w-[3px] rounded-full bg-fg-300"

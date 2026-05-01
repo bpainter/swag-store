@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getFeaturedProducts } from "@/lib/api/products";
-import { formatCents } from "@/lib/format";
+import { categoryLabel, formatCents } from "@/lib/format";
 
 // Server component. Reuses the cached getFeaturedProducts() call from the
 // homepage — because the function is "use cache" with cacheLife("hours"),
@@ -39,7 +39,7 @@ export async function HeroVisual() {
           letterSpacing: "0.05em",
         }}
       >
-        {primary.slug.toUpperCase()} · {primary.category.toUpperCase()}
+        {primary.slug.toUpperCase()} · {categoryLabel(primary.category).toUpperCase()}
       </div>
 
       {/* Bottom-right name + price card. */}

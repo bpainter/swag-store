@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Product } from "@/lib/api/types";
-import { formatCents } from "@/lib/format";
+import { categoryLabel, formatCents } from "@/lib/format";
 
 // Stock prop is OPTIONAL. Search results don't pass it (we won't issue
 // per-product /stock fetches inside the grid; that's a per-request endpoint
@@ -38,7 +38,7 @@ export function ProductCard({ product, stock }: ProductCardProps) {
         <div className="flex flex-col gap-1.5 p-4 pt-3 pb-[18px]">
           {/* Top row: category eyebrow + optional stock badge. */}
           <div className="flex items-center justify-between gap-2">
-            <span className="eyebrow">{product.category}</span>
+            <span className="eyebrow">{categoryLabel(product.category)}</span>
             {soldOut && <SoldOutBadge />}
             {lowStock && <LowStockBadge />}
           </div>
