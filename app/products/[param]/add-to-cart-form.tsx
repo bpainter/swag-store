@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Bookmark, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
@@ -17,6 +18,7 @@ export function AddToCartForm({
   product: Product;
   stock: number;
 }) {
+  const router = useRouter();
   const outOfStock = stock === 0;
   const max = Math.max(1, stock);
   const [qty, setQty] = useState(1);
@@ -45,9 +47,14 @@ export function AddToCartForm({
       const result = await addToCartAction(undefined, formData);
       if (result?.error) {
         setError(result.error);
-      } else if (result?.success) {
-        setSuccess("Added to cart.");
+        // Throw so useOptimistic auto-reverts when the transition unwinds.
+        throw new Error(result.error);
       }
+      setSuccess("Added to cart.");
+      // Re-render the current route so <CartHydrator /> re-runs and the
+      // provider's baseCart syncs to the post-mutation server truth. Scoped
+      // to this route — other routes' router cache is untouched.
+      router.refresh();
     });
   };
 

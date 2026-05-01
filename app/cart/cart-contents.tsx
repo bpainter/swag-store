@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
@@ -14,6 +15,7 @@ import { formatCents } from "@/lib/format";
 // Reads from the same CartProvider as the header badge + drawer, so /cart,
 // the drawer, and the badge always show identical state.
 export function CartContents() {
+  const router = useRouter();
   const { cart, applyOptimistic, setError } = useCart();
   const [isPending, startTransition] = useTransition();
 
@@ -41,10 +43,12 @@ export function CartContents() {
       applyOptimistic({ type: "update", productId, quantity: nextQty });
       try {
         await updateQuantityAction(productId, nextQty);
+        router.refresh();
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Could not update quantity",
         );
+        throw err;
       }
     });
   };
@@ -54,8 +58,10 @@ export function CartContents() {
       applyOptimistic({ type: "remove", productId });
       try {
         await removeItemAction(productId);
+        router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not remove item");
+        throw err;
       }
     });
   };

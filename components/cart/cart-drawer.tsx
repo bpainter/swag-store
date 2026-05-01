@@ -48,8 +48,10 @@ export function CartDrawer({
       applyOptimistic({ type: "clear" });
       try {
         await clearCartAction();
+        router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not clear cart");
+        throw err;
       }
     });
   };

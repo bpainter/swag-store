@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
@@ -20,6 +21,7 @@ export function CartLine({
   onClose: () => void;
 }) {
   const productHref = `/products/${item.product.slug}`;
+  const router = useRouter();
   const { applyOptimistic, setError } = useCart();
   const [isPending, startTransition] = useTransition();
 
@@ -33,10 +35,14 @@ export function CartLine({
       });
       try {
         await updateQuantityAction(item.productId, nextQty);
+        // Re-render the current route so <CartHydrator /> re-runs and the
+        // provider's baseCart syncs to post-mutation server truth.
+        router.refresh();
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Could not update quantity",
         );
+        throw err;
       }
     });
   };
@@ -46,8 +52,10 @@ export function CartLine({
       applyOptimistic({ type: "remove", productId: item.productId });
       try {
         await removeItemAction(item.productId);
+        router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not remove item");
+        throw err;
       }
     });
   };

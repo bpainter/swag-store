@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { addItem, ensureCart, getCart, removeItem, updateItem } from "@/lib/api/cart";
 
@@ -64,8 +63,8 @@ export async function removeItemAction(itemId: string): Promise<void> {
 }
 
 // The API has no bulk-clear endpoint; remove one at a time. Per-item errors
-// are swallowed so a partial-clear state still ends up consistent after
-// revalidation.
+// are swallowed so a partial-clear state stays consistent — the client's
+// router.refresh() after this resolves picks up whatever the API now reports.
 export async function clearCartAction(): Promise<void> {
   const cart = await getCart();
   if (!cart) return;
@@ -77,7 +76,4 @@ export async function clearCartAction(): Promise<void> {
       // see top-of-function comment
     }
   }
-
-  revalidatePath("/cart");
-  revalidatePath("/", "layout");
 }
