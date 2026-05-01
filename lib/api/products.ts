@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cacheLife } from "next/cache";
 import { SwagApiError, swagFetch } from "@/lib/api/client";
 import type { Product, PaginationMeta } from "@/lib/api/types";
@@ -35,6 +36,42 @@ export async function getProduct(idOrSlug: string): Promise<Product | null> {
     }
     throw e;
   }
+}
+
+/**
+ * Request-scoped wrapper around getProduct. Use this from server components,
+ * generateMetadata, and opengraph-image generators that may all run for the
+ * same request — React.cache memoizes the call within a single render so
+ * the page, its metadata, and the OG image share one cache lookup. Doesn't
+ * undermine the "use cache" cross-request layer; just dedupes within it.
+ */
+export const getProductOnce = cache(getProduct);
+
+/**
+ * Returns the entire catalog, paginating through /products until the API
+ * reports no next page. Cached for days — the catalog is structural and
+ * mainly used by generateStaticParams at build time.
+ */
+export async function listAllProducts(): Promise<Product[]> {
+  "use cache";
+  cacheLife("days");
+
+  const PAGE_SIZE = 100;
+  const all: Product[] = [];
+  let page = 1;
+
+  while (true) {
+    const qs = new URLSearchParams({
+      page: String(page),
+      limit: String(PAGE_SIZE),
+    });
+    const { data, meta } = await swagFetch<Product[]>(`/products?${qs}`);
+    all.push(...data);
+    if (!meta?.pagination?.hasNextPage) break;
+    page += 1;
+  }
+
+  return all;
 }
 
 export interface SearchProductsParams {

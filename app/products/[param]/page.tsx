@@ -10,7 +10,7 @@ import {
   Ruler,
   Truck,
 } from "lucide-react";
-import { getProduct } from "@/lib/api/products";
+import { getProductOnce, listAllProducts } from "@/lib/api/products";
 import { getStock } from "@/lib/api/stock";
 import { categoryLabel, formatCents } from "@/lib/format";
 import { AddToCartForm } from "./add-to-cart-form";
@@ -20,6 +20,13 @@ import { StockSkeleton } from "./stock-skeleton";
 type Props = {
   params: Promise<{ param: string }>;
 };
+
+// Prerender every known PDP at build time. Unknown slugs fall through to the
+// runtime route, where getProduct returns null and notFound() returns 404.
+export async function generateStaticParams() {
+  const products = await listAllProducts();
+  return products.map((p) => ({ param: p.slug }));
+}
 
 // 155 is the practical OG description ceiling on X/Facebook.
 function truncate(text: string, max = 155): string {
@@ -31,7 +38,7 @@ function truncate(text: string, max = 155): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { param } = await params;
-  const product = await getProduct(param);
+  const product = await getProductOnce(param);
   if (!product) return { title: "Product not found" };
 
   const description = truncate(product.description);
@@ -84,7 +91,7 @@ export default async function ProductPage({ params }: Props) {
   // notFound() must fire synchronously here, before any streamed dynamic
   // call commits the response status. getProduct returns null on NOT_FOUND
   // (rather than throwing) so the call is plain control flow.
-  const product = await getProduct(param);
+  const product = await getProductOnce(param);
   if (!product) notFound();
 
   // Stock streams via <StockBadge> for the visible indicator; we also await
