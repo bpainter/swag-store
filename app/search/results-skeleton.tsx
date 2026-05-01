@@ -1,15 +1,17 @@
 import { ProductCardSkeleton } from "@/components/product/product-card-skeleton";
 
-// Suspense fallback for <SearchResults />. Renders five placeholder cards in
-// a 5-col grid (matching the design's loading state). The 2/3-col steps for
-// narrower viewports keep the cards readable on tablet and mobile.
-export function ResultsSkeleton() {
+// Suspense fallback for <SearchResults />. Mirrors the resolved grid shape
+// (auto-fill / minmax(220px, 1fr)) so the layout doesn't shift when results
+// arrive. `count` is derived in the page from the active mode: 5 for active
+// text searches (the assignment cap) and a dozen for the browse / default
+// view, so the skeleton looks roughly the same density as what's coming.
+export function ResultsSkeleton({ count = 12 }: { count?: number }) {
   return (
     <ul
       aria-hidden="true"
-      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 list-none p-0 m-0"
+      className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3.5 list-none p-0 m-0"
     >
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
     </ul>

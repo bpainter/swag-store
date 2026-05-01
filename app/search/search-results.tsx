@@ -3,11 +3,41 @@ import { SearchX } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { searchProducts } from "@/lib/api/products";
 
-const RESULT_LIMIT = 5;
+// The assignment caps "search" results (active text query) at 5. The "default
+// state" — no query — is meant to be a browseable selection, so we ask the
+// API for a generous page of products instead. Category-only views are
+// treated as browsing too: "/search?category=mugs" should show all mugs, not
+// the first 5.
+const SEARCH_LIMIT = 5;
+const BROWSE_LIMIT = 24;
+
+// Normalize the URL inputs into a single shape both this component and
+// SearchCount can rely on. "All" (case-insensitive) is the CategorySelect
+// sentinel for "no category" — strip it so the API isn't called with
+// `category=all` (which would 0-result).
+function normalizeFilters(q?: string, category?: string) {
+  const cleanQ = q?.trim() || undefined;
+  const cleanCategory =
+    category && category.toLowerCase() !== "all" ? category : undefined;
+  return { q: cleanQ, category: cleanCategory };
+}
+
+// Resolve which mode this render is in. Only an active TEXT query triggers
+// search-mode (the 5-cap). Category-only filtering keeps browse semantics
+// per the assignment spec on PDF page 6.
+export function isSearchMode(q?: string, category?: string): boolean {
+  const { q: cleanQ } = normalizeFilters(q, category);
+  return !!cleanQ;
+}
+
+export function searchLimit(q?: string, category?: string): number {
+  return isSearchMode(q, category) ? SEARCH_LIMIT : BROWSE_LIMIT;
+}
 
 // Server component, called from inside <Suspense> on /search. searchProducts
 // is "use cache" keyed on its params — <SearchCount> calls it too with the
-// same params, so the cache layer dedupes the two calls to one round-trip.
+// same normalized params, so the cache layer dedupes the two calls to one
+// round-trip per request.
 //
 // Stock badges are intentionally omitted: per-product /stock fetches would
 // multiply network cost across the result set with little UX payoff. The
@@ -19,16 +49,18 @@ export async function SearchResults({
   q?: string;
   category?: string;
 }) {
-  const { products } = await searchProducts({
-    q: q || undefined,
-    category: category || undefined,
-    limit: RESULT_LIMIT,
-  });
+  const filters = normalizeFilters(q, category);
+  const isSearch = !!filters.q;
+  const limit = isSearch ? SEARCH_LIMIT : BROWSE_LIMIT;
 
-  const hasFilter = !!q || !!category;
+  const { products } = await searchProducts({ ...filters, limit });
 
-  if (hasFilter && products.length === 0) {
-    return <EmptyState q={q} />;
+  // Empty-state only fires for active text searches — browse-mode "no
+  // results" should be near-impossible (would require an empty catalog
+  // entirely), so the friendly empty card is reserved for the case the
+  // user actually typed something that matched nothing.
+  if (isSearch && products.length === 0) {
+    return <EmptyState q={filters.q} />;
   }
 
   return (
@@ -40,9 +72,8 @@ export async function SearchResults({
   );
 }
 
-// Empty-state card — only renders when the user has applied a filter and
-// got nothing back. When there's no filter we always have the default
-// selection to show, so this never appears.
+// Empty-state card — only renders when the user has typed a query and got
+// nothing back.
 function EmptyState({ q }: { q?: string }) {
   const SUGGESTIONS = ["hoodie", "pin", "mug", "tee"] as const;
   return (

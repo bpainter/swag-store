@@ -8,7 +8,7 @@ import { CategorySelect } from "./category-select";
 import { ResultsSkeleton } from "./results-skeleton";
 import { SearchCount } from "./search-count";
 import { SearchInput } from "./search-input";
-import { SearchResults } from "./search-results";
+import { SearchResults, isSearchMode } from "./search-results";
 
 export const metadata: Metadata = {
   // `title` runs through the root template ("%s | Vercel Swag Store").
@@ -99,10 +99,14 @@ export default async function SearchPage({ searchParams }: Props) {
       </div>
 
       {/* Results — same Suspense boundary contract as Phase 4. The `key`
-          forces React to re-suspend on navigation between queries. */}
+          forces React to re-suspend on navigation between queries. The
+          skeleton count tracks the active mode: 5 placeholders for active
+          text searches (the assignment cap), 12 for browse mode. */}
       <Suspense
         key={`${q ?? ""}-${category ?? ""}`}
-        fallback={<ResultsSkeleton />}
+        fallback={
+          <ResultsSkeleton count={isSearchMode(q, category) ? 5 : 12} />
+        }
       >
         <SearchResults q={q} category={category} />
       </Suspense>
