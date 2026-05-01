@@ -28,8 +28,6 @@ export async function addToCartAction(
   await ensureCart();
   await addItem(parsed.data.productId, parsed.data.quantity);
 
-  revalidatePath("/cart");
-  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -52,9 +50,6 @@ export async function updateQuantityAction(
   } else {
     await updateItem(parsed.data.itemId, parsed.data.quantity);
   }
-
-  revalidatePath("/cart");
-  revalidatePath("/", "layout");
 }
 
 const RemoveSchema = z.object({ itemId: z.string().min(1) });
@@ -66,9 +61,6 @@ export async function removeItemAction(itemId: string): Promise<void> {
   }
 
   await removeItem(parsed.data.itemId);
-
-  revalidatePath("/cart");
-  revalidatePath("/", "layout");
 }
 
 // The API has no bulk-clear endpoint; remove one at a time. Per-item errors
