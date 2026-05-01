@@ -11,9 +11,9 @@ import {
   Truck,
 } from "lucide-react";
 import { getProductOnce, listAllProducts } from "@/lib/api/products";
-import { getStock } from "@/lib/api/stock";
 import { categoryLabel, formatCents } from "@/lib/format";
-import { AddToCartForm } from "./add-to-cart-form";
+import { AddToCartSection } from "./add-to-cart-section";
+import { AddToCartSkeleton } from "./add-to-cart-skeleton";
 import { StockBadge } from "./stock-badge";
 import { StockSkeleton } from "./stock-skeleton";
 
@@ -93,10 +93,6 @@ export default async function ProductPage({ params }: Props) {
   // (rather than throwing) so the call is plain control flow.
   const product = await getProductOnce(param);
   if (!product) notFound();
-
-  // Stock streams via <StockBadge> for the visible indicator; we also await
-  // it here so the client form has an accurate `max` from first paint.
-  const initialStock = await getStock(param);
 
   return (
     <div className="container pt-8 pb-16">
@@ -223,7 +219,9 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
 
-          <AddToCartForm product={product} stock={initialStock.stock} />
+          <Suspense fallback={<AddToCartSkeleton />}>
+            <AddToCartSection product={product} />
+          </Suspense>
 
           <div className="mt-8 rounded-lg border border-border-100">
             {DETAIL_ROWS.map((row, i) => {

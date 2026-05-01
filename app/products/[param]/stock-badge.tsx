@@ -1,9 +1,9 @@
-import { getStock } from "@/lib/api/stock";
+import { getStockOnce } from "@/lib/api/stock";
 
 // Stock is uncached per the API spec. The "Checking stock" loading variant
 // lives in <StockSkeleton /> as the Suspense fallback.
 export async function StockBadge({ param }: { param: string }) {
-  const stock = await getStock(param);
+  const stock = await getStockOnce(param);
 
   if (stock.stock === 0) {
     return (
