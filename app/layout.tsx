@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PromoRibbon } from "@/components/layout/promo-ribbon";
 import { PromoRibbonSkeleton } from "@/components/layout/promo-ribbon-skeleton";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,6 +75,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </CartProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
