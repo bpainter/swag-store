@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
 import { getProduct } from "@/lib/api/products";
-import { isApi404 } from "@/lib/api/client";
 import { categoryLabel } from "@/lib/format";
 
 // getProduct() shares its "use cache" entry with the page + generateMetadata,
@@ -43,14 +42,8 @@ function brandFallback() {
 
 export default async function OG({ params }: Props) {
   const { param } = await params;
-
-  let product;
-  try {
-    product = await getProduct(param);
-  } catch (err) {
-    if (isApi404(err)) return brandFallback();
-    throw err;
-  }
+  const product = await getProduct(param);
+  if (!product) return brandFallback();
 
   return new ImageResponse(
     (

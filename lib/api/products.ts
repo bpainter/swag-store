@@ -1,6 +1,6 @@
 import "server-only";
 import { cacheLife } from "next/cache";
-import { swagFetch } from "@/lib/api/client";
+import { SwagApiError, swagFetch } from "@/lib/api/client";
 import type { Product, PaginationMeta } from "@/lib/api/types";
 
 /**
@@ -15,15 +15,26 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 }
 
 /**
- * Returns a single product by its ID or slug.
- * Cached for hours — product details (name, price, description) change on
- * planned schedules, not continuously.
+ * Returns a single product by its ID or slug, or null if the API responds
+ * with NOT_FOUND. Returning null (rather than throwing) lets the caller
+ * call notFound() synchronously and produce a real HTTP 404 — important
+ * because the PDP is partial-prerendered and a thrown notFound() inside
+ * a streamed dynamic call can't change the already-committed status.
+ *
+ * Cached for hours — product details rarely change.
  */
-export async function getProduct(idOrSlug: string): Promise<Product> {
+export async function getProduct(idOrSlug: string): Promise<Product | null> {
   "use cache";
   cacheLife("hours");
-  const { data } = await swagFetch<Product>(`/products/${idOrSlug}`);
-  return data;
+  try {
+    const { data } = await swagFetch<Product>(`/products/${idOrSlug}`);
+    return data;
+  } catch (e) {
+    if (e instanceof SwagApiError && e.code === "NOT_FOUND") {
+      return null;
+    }
+    throw e;
+  }
 }
 
 export interface SearchProductsParams {

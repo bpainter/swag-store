@@ -10,7 +10,6 @@ import {
   Ruler,
   Truck,
 } from "lucide-react";
-import { isApi404 } from "@/lib/api/client";
 import { getProduct } from "@/lib/api/products";
 import { getStock } from "@/lib/api/stock";
 import { categoryLabel, formatCents } from "@/lib/format";
@@ -32,28 +31,26 @@ function truncate(text: string, max = 155): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { param } = await params;
-  try {
-    const product = await getProduct(param);
-    const description = truncate(product.description);
-    return {
+  const product = await getProduct(param);
+  if (!product) return { title: "Product not found" };
+
+  const description = truncate(product.description);
+  return {
+    title: product.name,
+    description,
+    openGraph: {
       title: product.name,
       description,
-      openGraph: {
-        title: product.name,
-        description,
-        images: [
-          {
-            url: product.images[0],
-            width: 600,
-            height: 600,
-            alt: product.name,
-          },
-        ],
-      },
-    };
-  } catch {
-    return { title: "Product not found" };
-  }
+      images: [
+        {
+          url: product.images[0],
+          width: 600,
+          height: 600,
+          alt: product.name,
+        },
+      ],
+    },
+  };
 }
 
 // The API doesn't surface variants — the swatches are decorative.
@@ -84,15 +81,11 @@ const DETAIL_ROWS: ReadonlyArray<{
 export default async function ProductPage({ params }: Props) {
   const { param } = await params;
 
-  // Resolve the product before streaming starts — once the response is
-  // streaming, notFound() can no longer set HTTP 404.
-  let product;
-  try {
-    product = await getProduct(param);
-  } catch (err) {
-    if (isApi404(err)) notFound();
-    throw err;
-  }
+  // notFound() must fire synchronously here, before any streamed dynamic
+  // call commits the response status. getProduct returns null on NOT_FOUND
+  // (rather than throwing) so the call is plain control flow.
+  const product = await getProduct(param);
+  if (!product) notFound();
 
   // Stock streams via <StockBadge> for the visible indicator; we also await
   // it here so the client form has an accurate `max` from first paint.
