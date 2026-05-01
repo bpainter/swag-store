@@ -244,13 +244,10 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Quantity stepper + Add to Cart + Bookmark — client island. */}
-          <AddToCartForm
-            productId={product.id}
-            stock={initialStock.stock}
-            price={product.price}
-            currency={product.currency}
-          />
+          {/* Quantity stepper + Add to Cart + Bookmark — client island.
+              Receives the full product so the optimistic reducer can build a
+              synthetic line item for the cart provider on submit. */}
+          <AddToCartForm product={product} stock={initialStock.stock} />
 
           {/* Detail rows table */}
           <div className="mt-8 rounded-lg border border-border-100">

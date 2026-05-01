@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
-import { Header, HeaderSkeleton } from "@/components/layout/header";
+import { CartHydrator } from "@/components/cart/cart-hydrator";
+import { CartProvider } from "@/components/cart/cart-provider";
+import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PromoRibbon } from "@/components/layout/promo-ribbon";
 import { PromoRibbonSkeleton } from "@/components/layout/promo-ribbon-skeleton";
@@ -65,20 +67,27 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        {/* Promo ribbon sits ABOVE the header — it's the very first visible
-            row. Uncached (the API rotates promos per request), so it streams
-            via Suspense alongside the header below. */}
-        <Suspense fallback={<PromoRibbonSkeleton />}>
-          <PromoRibbon />
-        </Suspense>
-        {/* Header reads the cart cookie, so it's dynamic. Suspense lets the
-            rest of the page (footer, route content) keep prerendering while
-            the header — including the live cart badge — streams in. */}
-        <Suspense fallback={<HeaderSkeleton />}>
+        {/* CartProvider holds the optimistic cart state for the whole app.
+            <CartHydrator /> (server) fetches the real cart inside its own
+            Suspense boundary and pipes it into the provider via <CartHydrate />
+            — this keeps the layout shell static (PPR survives) while still
+            getting the cart data into client cart-aware components. */}
+        <CartProvider>
+          <Suspense fallback={null}>
+            <CartHydrator />
+          </Suspense>
+          {/* Promo ribbon sits ABOVE the header — it's the very first
+              visible row. Uncached (the API rotates promos per request), so
+              it streams via Suspense alongside the rest. */}
+          <Suspense fallback={<PromoRibbonSkeleton />}>
+            <PromoRibbon />
+          </Suspense>
+          {/* Header is now sync — the cart badge inside it reads from the
+              client provider, not from a server fetch in the header tree. */}
           <Header />
-        </Suspense>
-        <main className="flex-1">{children}</main>
-        <Footer />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

@@ -1,65 +1,37 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState, useTransition } from "react";
 import { Bookmark, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/components/cart/cart-provider";
 import { addToCartAction } from "@/app/cart/actions";
 import { formatCents } from "@/lib/format";
+import type { Product } from "@/lib/api/types";
 
-// Submit button reads pending state from the surrounding <form>'s action.
-// Must be a separate component because useFormStatus only works for a button
-// rendered *inside* a <form> with a server action — it can't read the parent's
-// state from outside. Disabled while pending or when stock is zero. The label
-// shows the live (price * qty) total so the user always sees what they'll pay.
-function SubmitButton({
-  outOfStock,
-  totalCents,
-  currency,
-}: {
-  outOfStock: boolean;
-  totalCents: number;
-  currency: string;
-}) {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      size="lg"
-      disabled={pending || outOfStock}
-      className="h-11 flex-1"
-    >
-      {pending
-        ? "Adding…"
-        : outOfStock
-          ? "Sold out"
-          : (
-            <>
-              Add to cart ·{" "}
-              <span className="tabular">
-                {formatCents(totalCents, currency)}
-              </span>
-            </>
-          )}
-    </Button>
-  );
-}
-
+// Optimistic-aware Add-to-cart form. Wraps the existing addToCartAction in a
+// transition that:
+//   1. Applies the optimistic mutation via the CartProvider's reducer — so
+//      the header badge + drawer reflect the new item before the round-trip
+//      completes.
+//   2. Calls the server action.
+//   3. On error: surfaces a toast via the provider; useOptimistic's pending
+//      state evaporates automatically when the transition ends, so the badge
+//      reverts to the real server cart.
 export function AddToCartForm({
-  productId,
+  product,
   stock,
-  price,
-  currency = "USD",
 }: {
-  productId: string;
+  // Full product so the optimistic reducer can construct a synthetic line
+  // item without an extra fetch on the client.
+  product: Product;
   stock: number;
-  price: number; // unit price in cents — required for live total in submit label
-  currency?: string;
 }) {
   const outOfStock = stock === 0;
   const max = Math.max(1, stock);
   const [qty, setQty] = useState<number>(1);
-  const [state, formAction] = useActionState(addToCartAction, undefined);
+  const [success, setSuccess] = useState<string | null>(null);
+  const { applyOptimistic, setError } = useCart();
+  const [isPending, startTransition] = useTransition();
 
   // Clamp helpers — stepper buttons + manual edit all funnel through these
   // so 0/negatives/over-stock never reach the server action.
@@ -67,9 +39,32 @@ export function AddToCartForm({
   const dec = () => setClamped(qty - 1);
   const inc = () => setClamped(qty + 1);
 
+  const handleSubmit = (formData: FormData) => {
+    const productId = String(formData.get("productId") ?? "");
+    const quantity = Number(formData.get("quantity") ?? 0);
+    if (!productId || !Number.isFinite(quantity) || quantity < 1) return;
+
+    startTransition(async () => {
+      applyOptimistic({
+        type: "add",
+        productId,
+        quantity,
+        product,
+      });
+      setSuccess(null);
+
+      const result = await addToCartAction(undefined, formData);
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.success) {
+        setSuccess("Added to cart.");
+      }
+    });
+  };
+
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <input type="hidden" name="productId" value={productId} />
+    <form action={handleSubmit} className="flex flex-col gap-4">
+      <input type="hidden" name="productId" value={product.id} />
 
       <div className="flex items-stretch gap-2.5">
         {/* Quantity stepper — single bordered group containing − / input / +. */}
@@ -77,7 +72,7 @@ export function AddToCartForm({
           <button
             type="button"
             onClick={dec}
-            disabled={qty <= 1 || outOfStock}
+            disabled={qty <= 1 || outOfStock || isPending}
             aria-label="Decrease quantity"
             className="inline-flex w-10 items-center justify-center text-fg-100 transition-colors hover:bg-color-100 disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -93,7 +88,7 @@ export function AddToCartForm({
               const next = parseInt(e.target.value || "0", 10);
               setClamped(Number.isFinite(next) ? next : 1);
             }}
-            disabled={outOfStock}
+            disabled={outOfStock || isPending}
             // tabular + mono + center; native spin buttons hidden via
             // [appearance:textfield] so the layout doesn't shift on focus.
             className="tabular w-12 border-x border-border-200 bg-transparent text-center text-sm text-fg-100 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none disabled:opacity-50"
@@ -101,7 +96,7 @@ export function AddToCartForm({
           <button
             type="button"
             onClick={inc}
-            disabled={qty >= max || outOfStock}
+            disabled={qty >= max || outOfStock || isPending}
             aria-label="Increase quantity"
             className="inline-flex w-10 items-center justify-center text-fg-100 transition-colors hover:bg-color-100 disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -109,11 +104,25 @@ export function AddToCartForm({
           </button>
         </div>
 
-        <SubmitButton
-          outOfStock={outOfStock}
-          totalCents={price * qty}
-          currency={currency}
-        />
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending || outOfStock}
+          className="h-11 flex-1"
+        >
+          {isPending
+            ? "Adding…"
+            : outOfStock
+              ? "Sold out"
+              : (
+                <>
+                  Add to cart ·{" "}
+                  <span className="tabular">
+                    {formatCents(product.price * qty, product.currency)}
+                  </span>
+                </>
+              )}
+        </Button>
 
         {/* Decorative save/bookmark — no behavior; icon-only outline button. */}
         <Button
@@ -127,14 +136,9 @@ export function AddToCartForm({
         </Button>
       </div>
 
-      {state?.error && (
-        <p role="alert" aria-live="polite" className="text-sm text-red-500">
-          {state.error}
-        </p>
-      )}
-      {state?.success && (
+      {success && (
         <p role="status" aria-live="polite" className="text-sm text-green-500">
-          Added to cart.
+          {success}
         </p>
       )}
     </form>

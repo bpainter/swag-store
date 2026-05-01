@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ShoppingBag, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,27 +11,29 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { CartLine } from "@/components/cart/cart-line";
+import { useCart } from "@/components/cart/cart-provider";
 import { clearCartAction } from "@/app/cart/actions";
-import type { CartWithProducts } from "@/lib/api/types";
 import { formatCents } from "@/lib/format";
 
 const FREE_SHIPPING_THRESHOLD_CENTS = 7500; // $75
 const FLAT_SHIPPING_CENTS = 800; // $8 below the threshold
 const TAX_RATE = 0.08; // estimate; not authoritative
 
-// Slide-in cart drawer. Receives `cart` as a prop from the server-rendered
-// CartButton chain — when a server action revalidates the layout, the
-// header re-renders and passes a fresh cart in here. No client cart state.
+// Slide-in cart drawer. Reads cart state (with optimistic merges) from the
+// CartProvider context — every mutation in <AddToCartForm /> or <CartLine />
+// flows through useOptimistic, so the drawer reflects pending changes
+// instantly without waiting for the server round-trip.
 export function CartDrawer({
-  cart,
   open,
   onOpenChange,
 }: {
-  cart: CartWithProducts | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const { cart, applyOptimistic, setError } = useCart();
+  const [isPending, startTransition] = useTransition();
+
   const items = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
   const currency = cart?.currency ?? "USD";
@@ -42,6 +45,20 @@ export function CartDrawer({
   const browseShop = () => {
     close();
     router.push("/");
+  };
+
+  const handleClear = () => {
+    startTransition(async () => {
+      // Wipe optimistically first so the drawer collapses to the empty
+      // state immediately; the server clear runs in the background and
+      // revalidatePath re-bases the provider state.
+      applyOptimistic({ type: "clear" });
+      try {
+        await clearCartAction();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not clear cart");
+      }
+    });
   };
 
   const shippingCents =
@@ -151,16 +168,15 @@ export function CartDrawer({
                 <ArrowRight size={14} aria-hidden="true" />
               </Button>
 
-              {/* Clear cart — server action; revalidatePath will drop new
-                  props in here on the next render and the empty-state shows. */}
-              <form action={clearCartAction} className="self-center">
-                <button
-                  type="submit"
-                  className="inline-flex h-7 items-center rounded-md px-2.5 text-[12px] text-fg-300 transition-colors hover:bg-color-100 hover:text-fg-100"
-                >
-                  Clear cart
-                </button>
-              </form>
+              {/* Clear cart — optimistic, then server-confirmed. */}
+              <button
+                type="button"
+                onClick={handleClear}
+                disabled={isPending}
+                className="self-center inline-flex h-7 items-center rounded-md px-2.5 text-[12px] text-fg-300 transition-colors hover:bg-color-100 hover:text-fg-100 disabled:opacity-50"
+              >
+                {isPending ? "Clearing…" : "Clear cart"}
+              </button>
             </div>
           </>
         )}

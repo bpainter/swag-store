@@ -208,13 +208,18 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="relative aspect-[1.4/1] overflow-hidden rounded-lg border border-border-100">
+            {/* Square, capped at 460px so it sits slightly taller than the
+                text column on desktop without overpowering it. On mobile the
+                column stacks; max-w-sm + mx-auto keeps the image centered
+                and prevents it from going full-width. justify-self-end on
+                desktop nudges it to the right edge of its grid column. */}
+            <div className="relative aspect-square w-full max-w-sm mx-auto lg:max-w-[460px] lg:mx-0 lg:justify-self-end overflow-hidden rounded-lg border border-border-100">
               {brandImage && (
                 <Image
                   src={brandImage}
                   alt={brandImageAlt}
                   fill
-                  sizes="(min-width: 1024px) 480px, 100vw"
+                  sizes="(max-width: 1024px) 80vw, 460px"
                   className="object-cover"
                 />
               )}

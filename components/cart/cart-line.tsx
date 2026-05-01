@@ -1,8 +1,10 @@
 "use client";
 
+import { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useCart } from "@/components/cart/cart-provider";
 import {
   removeItemAction,
   updateQuantityAction,
@@ -12,9 +14,10 @@ import { formatCents } from "@/lib/format";
 
 // Single drawer line — image, name, price-each, qty stepper, remove, line
 // total. Lives inside the client drawer so it can close the drawer when the
-// user clicks through to a PDP. Mutations route through the existing server
-// actions via tiny <form action={...}> wrappers (each .bind(null, …) call
-// freezes the args needed for that specific button click).
+// user clicks through to a PDP. Mutations apply optimistic state first, then
+// hit the server action; on error the provider's toast surfaces the failure
+// and the optimistic merge evaporates when the transition ends, leaving the
+// real server state intact.
 export function CartLine({
   item,
   onClose,
@@ -23,6 +26,38 @@ export function CartLine({
   onClose: () => void;
 }) {
   const productHref = `/products/${item.product.slug}`;
+  const { applyOptimistic, setError } = useCart();
+  const [isPending, startTransition] = useTransition();
+
+  const adjust = (nextQty: number) => {
+    // Quantity changes: <=0 collapses to remove via the reducer + the
+    // server action's own zero-quantity branch.
+    startTransition(async () => {
+      applyOptimistic({
+        type: "update",
+        productId: item.productId,
+        quantity: nextQty,
+      });
+      try {
+        await updateQuantityAction(item.productId, nextQty);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Could not update quantity",
+        );
+      }
+    });
+  };
+
+  const remove = () => {
+    startTransition(async () => {
+      applyOptimistic({ type: "remove", productId: item.productId });
+      try {
+        await removeItemAction(item.productId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not remove item");
+      }
+    });
+  };
 
   return (
     <div className="grid grid-cols-[72px_1fr_auto] items-start gap-3.5 border-t border-border-100 px-5 py-4 first:border-t-0">
@@ -58,55 +93,50 @@ export function CartLine({
         <div className="mt-2.5 flex items-center gap-3">
           {/* Qty stepper — tighter (28px tall) than the PDP's 44px version. */}
           <div className="inline-flex h-7 items-stretch overflow-hidden rounded-md border border-border-200">
-            <form
-              action={updateQuantityAction.bind(
-                null,
-                item.productId,
-                item.quantity - 1,
-              )}
+            <button
+              type="button"
+              onClick={() => adjust(item.quantity - 1)}
+              disabled={isPending}
+              // At qty=1, clicking − sends quantity=0; the reducer collapses
+              // to remove and the server action's zero-quantity branch
+              // deletes the line. Lets users empty a row from the stepper
+              // without reaching for the explicit Remove button.
+              aria-label={
+                item.quantity > 1
+                  ? `Decrease ${item.product.name}`
+                  : `Remove ${item.product.name}`
+              }
+              className="inline-flex h-full w-7 items-center justify-center text-fg-100 transition-colors hover:bg-color-100 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <button
-                type="submit"
-                disabled={item.quantity <= 1}
-                aria-label={`Decrease ${item.product.name}`}
-                className="inline-flex h-full w-7 items-center justify-center text-fg-100 transition-colors hover:bg-color-100 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Minus size={12} aria-hidden="true" />
-              </button>
-            </form>
+              <Minus size={12} aria-hidden="true" />
+            </button>
             <span
               aria-label={`Quantity ${item.quantity}`}
               className="tabular inline-flex w-9 items-center justify-center border-x border-border-200 text-[12px] text-fg-100"
             >
               {item.quantity}
             </span>
-            <form
-              action={updateQuantityAction.bind(
-                null,
-                item.productId,
-                item.quantity + 1,
-              )}
+            <button
+              type="button"
+              onClick={() => adjust(item.quantity + 1)}
+              disabled={isPending}
+              aria-label={`Increase ${item.product.name}`}
+              className="inline-flex h-full w-7 items-center justify-center text-fg-100 transition-colors hover:bg-color-100 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <button
-                type="submit"
-                aria-label={`Increase ${item.product.name}`}
-                className="inline-flex h-full w-7 items-center justify-center text-fg-100 transition-colors hover:bg-color-100"
-              >
-                <Plus size={12} aria-hidden="true" />
-              </button>
-            </form>
+              <Plus size={12} aria-hidden="true" />
+            </button>
           </div>
 
-          {/* Remove — text-button with trash icon; uses removeItemAction. */}
-          <form action={removeItemAction.bind(null, item.productId)}>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1 text-[12px] text-fg-300 hover:text-fg-100 transition-colors"
-            >
-              <Trash2 size={12} aria-hidden="true" />
-              Remove
-            </button>
-          </form>
+          {/* Remove — text-button with trash icon. */}
+          <button
+            type="button"
+            onClick={remove}
+            disabled={isPending}
+            className="inline-flex items-center gap-1 text-[12px] text-fg-300 hover:text-fg-100 transition-colors disabled:opacity-50"
+          >
+            <Trash2 size={12} aria-hidden="true" />
+            Remove
+          </button>
         </div>
       </div>
 

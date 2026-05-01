@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
-import type { CartWithProducts } from "@/lib/api/types";
+import { useCart } from "@/components/cart/cart-provider";
 
-// Client wrapper that owns the drawer's open/closed state. Receives `cart`
-// from the server-rendered <CartIcon /> chain so the drawer reflects
-// authoritative server data — no client-side cart fetching, no localStorage.
-//
-// When a server action revalidates the layout, the Header re-fetches and
-// passes new props through CartIcon → CartButton → CartDrawer; the drawer
-// content updates automatically without any client-side store.
-export function CartButton({ cart }: { cart: CartWithProducts | null }) {
+// Client island that owns the drawer's open/closed state and renders the
+// header cart icon + badge. Reads the cart (with optimistic merges) from the
+// CartProvider context — clicks in <AddToCartForm /> bump that state instantly,
+// so the badge updates with no perceptible delay.
+export function CartButton() {
   const [open, setOpen] = useState(false);
+  const { cart } = useCart();
   const count = cart?.totalItems ?? 0;
 
   return (
@@ -35,7 +33,7 @@ export function CartButton({ cart }: { cart: CartWithProducts | null }) {
         )}
       </button>
 
-      <CartDrawer cart={cart} open={open} onOpenChange={setOpen} />
+      <CartDrawer open={open} onOpenChange={setOpen} />
     </>
   );
 }
